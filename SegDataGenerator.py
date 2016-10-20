@@ -94,7 +94,7 @@ class SegDirectoryIterator(Iterator):
             x = img_to_array(img, dim_ordering=self.dim_ordering)
             y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
             if self.ignore_label:
-                y[np.where(y==self.ignore_label)] = 0
+                y[np.where(y==self.ignore_label)] = self.nb_classes
 
             if self.target_size == None:
                 batch_x = np.zeros((current_batch_size,) + x.shape)

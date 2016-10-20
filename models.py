@@ -15,11 +15,35 @@ import tensorflow as tf
 from get_weights_path import *
 
 # Softmax cross-entropy loss function for segmentation
-def softmax_sparse_crossentropy(labels, x):
+def softmax_sparse_crossentropy_ignoring_last_label(labels, x):
     x = K.reshape(x, (-1, K.int_shape(x)[-1]))
-    labels = K.reshape(labels, (-1, 1))
-    return K.sparse_categorical_crossentropy(x, labels, from_logits=True)
+    x = x + K.epsilon()
+    softmax = K.softmax(x)
 
+    labels = K.one_hot(tf.to_int32(K.flatten(labels)), K.int_shape(x)[-1]+1)
+    labels = tf.pack(tf.unpack(labels, axis=-1)[:-1], axis=-1)
+
+    cross_entropy = -K.sum(labels * K.log(softmax), axis=1)
+    cross_entropy_mean = K.mean(cross_entropy)
+    '''
+    logits = tf.reshape(logits, (-1, num_classes))
+    epsilon = tf.constant(value=1e-4)
+    logits = logits + epsilon
+    labels = tf.to_float(tf.reshape(labels, (-1, num_classes)))
+    softmax = tf.nn.softmax(logits)
+    if head is not None:
+        cross_entropy = -tf.reduce_sum(tf.mul(labels * tf.log(softmax),
+                                       head), reduction_indices=[1])
+    else:
+        cross_entropy = -tf.reduce_sum(
+            labels * tf.log(softmax), reduction_indices=[1])
+    cross_entropy_mean = tf.reduce_mean(cross_entropy,
+                                        name='xentropy_mean')
+    tf.add_to_collection('losses', cross_entropy_mean)
+    loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
+    return loss
+    '''
+    return cross_entropy_mean
 
 
 def FCN_Vgg16_32s(input_shape = None, weight_decay=0.):

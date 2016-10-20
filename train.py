@@ -37,7 +37,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name,
     ###########################################################
     model = globals()[model_name](input_shape, weight_decay)
     sgd = SGD(lr=0.001, momentum=0.9)
-    model.compile(loss = softmax_sparse_crossentropy, optimizer=sgd, metrics=['accuracy'])
+    model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=['accuracy'])
     model.summary()
     model_path = os.path.join(current_dir, save_path + "/model.json")
     # save model structure
