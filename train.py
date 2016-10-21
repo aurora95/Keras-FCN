@@ -86,7 +86,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name,
 
 if __name__ == '__main__':
     model_name = 'FCN_Vgg16_32s'
-    batch_size = 1
+    batch_size = 8
     nb_epoch = 200
     lr_dict = lr_dict = {0: 0.00001, 80: 0.000001, 120: 0.0000001}
     weight_decay = 0.0002
