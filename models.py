@@ -10,7 +10,7 @@ from keras.models import model_from_json
 from keras.utils import np_utils
 from keras.applications.vgg16 import *
 
-from get_weights_path import *
+from utils.get_weights_path import *
 
 def FCN_Vgg16_32s(input_shape = None, weight_decay=0.):
     img_input = Input(shape=input_shape)

@@ -11,9 +11,9 @@ from keras.models import load_model
 import keras.utils.visualize_util as vis_util
 
 from models import *
-from loss_function import *
-from utils import TrainingStateCheckpoint
-from SegDataGenerator import *
+from utils.loss_function import *
+from utils.TrainingStateCheckpoint import *
+from utils.SegDataGenerator import *
 
 def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
             data_dir, label_dir, target_size=None, resume_training=False):
@@ -53,7 +53,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
         model.load_weights(checkpoint_path)
         with open(os.path.join(save_path, 'train_state.pkl')) as f:
             resume_from_epoch, batch_size, nb_epoch, lr_dict, weight_decay, nb_classes = pickle.load(f)
-        
+
         print 'resuming from epoch %d'%resume_from_epoch
         print lr_dict
     else:

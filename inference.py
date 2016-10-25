@@ -13,6 +13,8 @@ from models import *
 if __name__ == '__main__':
     image = cv2.imread('/home/aurora/Learning/Data/VOC2012/JPEGImages/2007_000033.jpg')
     label = Image.open('/home/aurora/Learning/Data/VOC2012/SegmentationClass/2007_000033.png')
+    print label
+    exit()
     #label.show(title='ground truth')
     #label = img_to_array(label)
     image = cv2.resize(image, (224, 224),interpolation=cv2.INTER_AREA)
@@ -33,7 +35,7 @@ if __name__ == '__main__':
 
     result = model.predict(image,batch_size=1)
     result = np.argmax(np.squeeze(result), axis=-1).astype(np.uint8)
-    
+
     temp = label.copy()
     temp.putdata(result)
     #temp.show(title='result')
