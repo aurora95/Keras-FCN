@@ -13,7 +13,6 @@ import keras.backend as K
 import tensorflow as tf
 
 from get_weights_path import *
-from models import *
 
 def transfer_FCN_Vgg16():
     input_shape = (224, 224, 3)

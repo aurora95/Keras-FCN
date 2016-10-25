@@ -15,6 +15,17 @@ from utils.loss_function import *
 from utils.TrainingStateCheckpoint import *
 from utils.SegDataGenerator import *
 
+def sparse_accuracy_ignoring_last_label(labels, x):
+    x = K.reshape(x, (-1, K.int_shape(x)[-1]))
+    x = x + K.epsilon()
+    softmax = K.softmax(x)
+
+    labels = K.one_hot(tf.to_int32(K.flatten(labels)), K.int_shape(x)[-1]+1)
+    labels = tf.pack(tf.unpack(labels, axis=-1)[:-1], axis=-1)
+
+    return K.mean(K.equal(K.argmax(labels, axis=-1),
+                    K.argmax(x, axis=-1)))
+
 def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
             data_dir, label_dir, target_size=None, resume_training=False):
     if target_size:
@@ -49,7 +60,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
         f.close
         model = model_from_json(model_json, {'BilinearUpSampling2D': BilinearUpSampling2D})
         sgd = SGD(lr=0.001, momentum=0.9)
-        model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=['accuracy'])
+        model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
         model.load_weights(checkpoint_path)
         with open(os.path.join(save_path, 'train_state.pkl')) as f:
             resume_from_epoch, batch_size, nb_epoch, lr_dict, weight_decay, nb_classes = pickle.load(f)
@@ -59,7 +70,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
     else:
         model = globals()[model_name](input_shape, weight_decay)
         sgd = SGD(lr=0.001, momentum=0.9)
-        model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=['accuracy'])
+        model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
         model_path = os.path.join(save_path, "model.json")
         # save model structure
         f = open(model_path, 'w')
@@ -104,8 +115,8 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
     model.save(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'FCN_Vgg16_32s'
-    batch_size = 1
+    model_name = 'FCN_Resnet50_32s'
+    batch_size = 16
     nb_epoch = 200
     lr_dict = lr_dict = {0: 0.00001, 80: 0.000001, 120: 0.0000001}
     weight_decay = 0.0002
