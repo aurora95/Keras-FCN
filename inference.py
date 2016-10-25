@@ -11,10 +11,10 @@ from keras.models import load_model
 from models import *
 
 if __name__ == '__main__':
-    image = cv2.imread('/home/aurora/Learning/Data/VOC2012/JPEGImages/2007_000033.jpg')
-    label = Image.open('/home/aurora/Learning/Data/VOC2012/SegmentationClass/2007_000033.png')
-    print label
-    exit()
+    img_num = '2007_000042'
+    image = cv2.imread('/home/aurora/Learning/Data/VOC2012/JPEGImages/%s.jpg'%img_num)
+    label = Image.open('/home/aurora/Learning/Data/VOC2012/SegmentationClass/%s.png'%img_num)
+
     #label.show(title='ground truth')
     #label = img_to_array(label)
     image = cv2.resize(image, (224, 224),interpolation=cv2.INTER_AREA)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     f = open(model_path, 'r')
     model_json = f.read()
     f.close
-    model = model_from_json(model_json)
+    model = model_from_json(model_json, {'BilinearUpSampling2D': BilinearUpSampling2D})
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
     model.load_weights(checkpoint_path)
     model.summary()
@@ -36,8 +36,8 @@ if __name__ == '__main__':
     result = model.predict(image,batch_size=1)
     result = np.argmax(np.squeeze(result), axis=-1).astype(np.uint8)
 
-    temp = label.copy()
-    temp.putdata(result)
-    #temp.show(title='result')
+    temp = Image.fromarray(result, mode='P')
+    temp.palette = label.palette
+    temp.show(title='result')
     print result
     print np.max(result)

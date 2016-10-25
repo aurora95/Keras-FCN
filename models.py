@@ -6,11 +6,76 @@ import sys
 from keras.models import Model
 from keras.regularizers import l2
 from keras.layers import *
-from keras.models import model_from_json
-from keras.utils import np_utils
+from keras.engine import Layer
 from keras.applications.vgg16 import *
+from keras.models import *
+import keras.backend as K
+import tensorflow as tf
 
 from utils.get_weights_path import *
+
+def resize_images_bilinear(X, height_factor, width_factor, dim_ordering):
+    '''Resizes the images contained in a 4D tensor of shape
+    - [batch, channels, height, width] (for 'th' dim_ordering)
+    - [batch, height, width, channels] (for 'tf' dim_ordering)
+    by a factor of (height_factor, width_factor). Both factors should be
+    positive integers.
+    '''
+    if dim_ordering == 'th':
+        original_shape = K.int_shape(X)
+        new_shape = tf.shape(X)[2:]
+        new_shape *= tf.constant(np.array([height_factor, width_factor]).astype('int32'))
+        X = permute_dimensions(X, [0, 2, 3, 1])
+        X = tf.image.resize_bilinear(X, new_shape)
+        X = permute_dimensions(X, [0, 3, 1, 2])
+        X.set_shape((None, None, original_shape[2] * height_factor, original_shape[3] * width_factor))
+        return X
+    elif dim_ordering == 'tf':
+        original_shape = K.int_shape(X)
+        new_shape = tf.shape(X)[1:3]
+        new_shape *= tf.constant(np.array([height_factor, width_factor]).astype('int32'))
+        X = tf.image.resize_bilinear(X, new_shape)
+        X.set_shape((None, original_shape[1] * height_factor, original_shape[2] * width_factor, None))
+        return X
+    else:
+        raise Exception('Invalid dim_ordering: ' + dim_ordering)
+
+class BilinearUpSampling2D(Layer):
+    def __init__(self, size=(2, 2), dim_ordering='default', **kwargs):
+        if dim_ordering == 'default':
+            dim_ordering = K.image_dim_ordering()
+        self.size = tuple(size)
+        assert dim_ordering in {'tf', 'th'}, 'dim_ordering must be in {tf, th}'
+        self.dim_ordering = dim_ordering
+        self.input_spec = [InputSpec(ndim=4)]
+        super(BilinearUpSampling2D, self).__init__(**kwargs)
+
+    def get_output_shape_for(self, input_shape):
+        if self.dim_ordering == 'th':
+            width = self.size[0] * input_shape[2] if input_shape[2] is not None else None
+            height = self.size[1] * input_shape[3] if input_shape[3] is not None else None
+            return (input_shape[0],
+                    input_shape[1],
+                    width,
+                    height)
+        elif self.dim_ordering == 'tf':
+            width = self.size[0] * input_shape[1] if input_shape[1] is not None else None
+            height = self.size[1] * input_shape[2] if input_shape[2] is not None else None
+            return (input_shape[0],
+                    width,
+                    height,
+                    input_shape[3])
+        else:
+            raise Exception('Invalid dim_ordering: ' + self.dim_ordering)
+
+    def call(self, x, mask=None):
+        return resize_images_bilinear(x, self.size[0], self.size[1],
+                               self.dim_ordering)
+
+    def get_config(self):
+        config = {'size': self.size}
+        base_config = super(BilinearUpSampling2D, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
 def FCN_Vgg16_32s(input_shape = None, weight_decay=0.):
     img_input = Input(shape=input_shape)
@@ -50,7 +115,7 @@ def FCN_Vgg16_32s(input_shape = None, weight_decay=0.):
     #classifying layer
     x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
-    x = UpSampling2D(size=(32, 32))(x)
+    x = BilinearUpSampling2D(size=(32, 32))(x)
 
     model = Model(img_input, x)
 
@@ -166,7 +231,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0.):
     #classifying layer
     x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
-    x = UpSampling2D(size=(32, 32))(x)
+    x = BilinearUpSampling2D(size=(32, 32))(x)
 
     model = Model(img_input, x)
     weights_path = os.path.expanduser(os.path.join('~', '.keras/models/fcn_resnet50_weights_tf_dim_ordering_tf_kernels.h5'))

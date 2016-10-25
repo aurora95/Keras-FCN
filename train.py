@@ -47,7 +47,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
         f = open(model_path, 'r')
         model_json = f.read()
         f.close
-        model = model_from_json(model_json)
+        model = model_from_json(model_json, {'BilinearUpSampling2D': BilinearUpSampling2D})
         sgd = SGD(lr=0.001, momentum=0.9)
         model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=['accuracy'])
         model.load_weights(checkpoint_path)
@@ -104,8 +104,8 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
     model.save(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'FCN_Resnet50_32s'
-    batch_size = 16
+    model_name = 'FCN_Vgg16_32s'
+    batch_size = 1
     nb_epoch = 200
     lr_dict = lr_dict = {0: 0.00001, 80: 0.000001, 120: 0.0000001}
     weight_decay = 0.0002
