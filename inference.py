@@ -23,7 +23,7 @@ if __name__ == '__main__':
     image = np.expand_dims(image, axis=0)
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    save_path = os.path.join(current_dir, 'FCN_Resnet50_32s')
+    save_path = os.path.join(current_dir, 'FCN_Vgg16_32s')
     model_path = os.path.join(save_path, "model.json")
     f = open(model_path, 'r')
     model_json = f.read()

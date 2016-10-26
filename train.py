@@ -112,7 +112,7 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
                                 ),
                                 nb_val_samples=get_file_len(val_file_path)
                             )
-    model.save(save_path+'/model.hdf5')
+    model.save_weights(save_path+'/final_model.hdf5')
 
 if __name__ == '__main__':
     model_name = 'FCN_Resnet50_32s'

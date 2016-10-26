@@ -13,6 +13,7 @@ import keras.backend as K
 import tensorflow as tf
 
 from get_weights_path import *
+from resnet_helpers import *
 
 def transfer_FCN_Vgg16():
     input_shape = (224, 224, 3)
@@ -139,5 +140,8 @@ def transfer_FCN_ResNet50():
         print 'Already transformed!'
 
 if __name__ == '__main__':
+    if sys.argv[1] not in {'Vgg16', 'ResNet50'}:
+        print 'Wrong argument! Model name must be Vgg16 or ResNet50.'
+        exit()
     func = globals()['transfer_FCN_%s'%sys.argv[1]]
     func()
