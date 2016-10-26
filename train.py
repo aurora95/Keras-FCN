@@ -112,13 +112,13 @@ def train(batch_size, nb_epoch, lr_dict, weight_decay, nb_classes, model_name, t
                                 ),
                                 nb_val_samples=get_file_len(val_file_path)
                             )
-    model.save_weights(save_path+'/final_model.hdf5')
+    model.save(save_path+'/final_model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'FCN_Resnet50_32s'
-    batch_size = 16
-    nb_epoch = 200
-    lr_dict = lr_dict = {0: 0.00001, 80: 0.000001, 120: 0.0000001}
+    model_name = 'FCN_Vgg16_32s'
+    batch_size = 20
+    nb_epoch = 1000
+    lr_dict = lr_dict = {0: 0.0001}
     weight_decay = 0.0002
     nb_classes = 21
     target_size = (224, 224)
