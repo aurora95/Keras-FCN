@@ -96,16 +96,16 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0.):
         conv_name_base = 'res' + str(stage) + block + '_branch'
         bn_name_base = 'bn' + str(stage) + block + '_branch'
 
-        x = AtrousConvolution2D(nb_filter1, 1, 1, atrous_rate=(1, 1), name=conv_name_base + '2a', W_regularizer=l2(weight_decay))(input_tensor)
+        x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a', W_regularizer=l2(weight_decay))(input_tensor)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, atrous_rate=(1, 1),
+        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, atrous_rate=(2, 2),
                           border_mode='same', name=conv_name_base + '2b', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter3, 1, 1, atrous_rate=(1, 1), name=conv_name_base + '2c', W_regularizer=l2(weight_decay))(x)
+        x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
         x = merge([x, input_tensor], mode='sum')
@@ -135,12 +135,12 @@ def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strid
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a')(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same', atrous_rate=(1, 1),
+        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same', atrous_rate=(2, 2),
                           name=conv_name_base + '2b', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b')(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter3, 1, 1, atrous_rate=(1, 1), name=conv_name_base + '2c', W_regularizer=l2(weight_decay))(x)
+        x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c')(x)
 
         shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
