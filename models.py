@@ -162,34 +162,34 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0.):
     model.load_weights(weights_path, by_name=True)
     return model
 
-def AtrousFCN_Resnet50_32s(input_shape = None, weight_decay=0.):
+def AtrousFCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.1):
     img_input = Input(shape=input_shape)
     bn_axis = 3
 
     x = Convolution2D(64, 7, 7, subsample=(2, 2), border_mode='same', name='conv1', W_regularizer=l2(weight_decay))(img_input)
-    x = BatchNormalization(axis=bn_axis, name='bn_conv1')(x)
+    x = BatchNormalization(axis=bn_axis, name='bn_conv1', momentum=batch_momentum)(x)
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
-    x = conv_block(3, [64, 64, 256], stage=2, block='a', strides=(1, 1))(x)
-    x = identity_block(3, [64, 64, 256], stage=2, block='b')(x)
-    x = identity_block(3, [64, 64, 256], stage=2, block='c')(x)
+    x = conv_block(3, [64, 64, 256], stage=2, block='a', strides=(1, 1), batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [64, 64, 256], stage=2, block='b', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [64, 64, 256], stage=2, block='c', batch_momentum=batch_momentum)(x)
 
-    x = conv_block(3, [128, 128, 512], stage=3, block='a')(x)
-    x = identity_block(3, [128, 128, 512], stage=3, block='b')(x)
-    x = identity_block(3, [128, 128, 512], stage=3, block='c')(x)
-    x = identity_block(3, [128, 128, 512], stage=3, block='d')(x)
+    x = conv_block(3, [128, 128, 512], stage=3, block='a', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [128, 128, 512], stage=3, block='b', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [128, 128, 512], stage=3, block='c', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [128, 128, 512], stage=3, block='d', batch_momentum=batch_momentum)(x)
 
-    x = conv_block(3, [256, 256, 1024], stage=4, block='a')(x)
-    x = identity_block(3, [256, 256, 1024], stage=4, block='b')(x)
-    x = identity_block(3, [256, 256, 1024], stage=4, block='c')(x)
-    x = identity_block(3, [256, 256, 1024], stage=4, block='d')(x)
-    x = identity_block(3, [256, 256, 1024], stage=4, block='e')(x)
-    x = identity_block(3, [256, 256, 1024], stage=4, block='f')(x)
+    x = conv_block(3, [256, 256, 1024], stage=4, block='a', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [256, 256, 1024], stage=4, block='b', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [256, 256, 1024], stage=4, block='c', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [256, 256, 1024], stage=4, block='d', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [256, 256, 1024], stage=4, block='e', batch_momentum=batch_momentum)(x)
+    x = identity_block(3, [256, 256, 1024], stage=4, block='f', batch_momentum=batch_momentum)(x)
 
-    x = atrous_conv_block(3, [512, 512, 2048], stage=5, block='a')(x)
-    x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='b')(x)
-    x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='c')(x)
+    x = atrous_conv_block(3, [512, 512, 2048], stage=5, block='a', batch_momentum=batch_momentum)(x)
+    x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='b', batch_momentum=batch_momentum)(x)
+    x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='c', batch_momentum=batch_momentum)(x)
     #classifying layer
     x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
