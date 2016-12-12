@@ -9,6 +9,7 @@ from keras.layers import *
 from keras.models import model_from_json
 from keras.utils import np_utils
 from keras.applications.vgg16 import *
+from keras.applications.resnet50 import *
 import keras.backend as K
 import tensorflow as tf
 
