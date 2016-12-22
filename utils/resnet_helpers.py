@@ -79,7 +79,7 @@ def conv_block(kernel_size, filters, stage, block, weight_decay=0., strides=(2, 
     return f
 
 # Atrous-Convolution version of residual blocks
-def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., batch_momentum=0.99):
+def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., atrous_rate=(2, 2), batch_momentum=0.99):
     '''The identity_block is the block that has no conv layer at shortcut
     # Arguments
         kernel_size: defualt 3, the kernel size of middle conv layer at main path
@@ -100,7 +100,7 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., b
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, atrous_rate=(2, 2),
+        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, atrous_rate=atrous_rate,
                           border_mode='same', name=conv_name_base + '2b', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
@@ -113,7 +113,7 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., b
         return x
     return f
 
-def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strides=(1, 1), batch_momentum=0.99):
+def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strides=(1, 1), atrous_rate=(2, 2), batch_momentum=0.99):
     '''conv_block is the block that has a conv layer at shortcut
     # Arguments
         kernel_size: defualt 3, the kernel size of middle conv layer at main path
@@ -135,7 +135,7 @@ def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strid
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
 
-        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same', atrous_rate=(2, 2),
+        x = AtrousConvolution2D(nb_filter2, kernel_size, kernel_size, border_mode='same', atrous_rate=atrous_rate,
                           name=conv_name_base + '2b', W_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
