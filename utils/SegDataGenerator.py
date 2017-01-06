@@ -2,6 +2,35 @@ from keras.preprocessing.image import *
 from PIL import Image
 import numpy as np
 import os
+import cv2
+
+def center_crop(x, center_crop_size, **kwargs):
+    centerw, centerh = x.shape[1]//2, x.shape[2]//2
+    halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
+    return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
+
+def pair_center_crop(x, center_crop_size, **kwargs):
+    centerw, centerh = x.shape[1]//2, x.shape[2]//2
+    halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
+    return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh], y[centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
+
+def random_crop(x, random_crop_size, sync_seed=None, **kwargs):
+    np.random.seed(sync_seed)
+    w, h = x.shape[1], x.shape[2]
+    rangew = (w - random_crop_size[0]) // 2
+    rangeh = (h - random_crop_size[1]) // 2
+    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+    offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
+    return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
+
+def pair_random_crop(x, y, random_crop_size, sync_seed=None, **kwargs):
+    np.random.seed(sync_seed)
+    w, h = x.shape[1], x.shape[2]
+    rangew = (w - random_crop_size[0]) // 2
+    rangeh = (h - random_crop_size[1]) // 2
+    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+    offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
+    return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]], y[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
 
 class SegDirectoryIterator(Iterator):
     '''
@@ -86,12 +115,22 @@ class SegDirectoryIterator(Iterator):
         for i, j in enumerate(index_array):
             data_file = self.data_files[j]
             label_file= self.label_files[j]
-            img = load_img(os.path.join(self.data_dir, data_file), grayscale=grayscale, target_size=self.target_size)
+            img = load_img(os.path.join(self.data_dir, data_file), grayscale=grayscale, target_size=None)
             label = Image.open(os.path.join(self.label_dir, label_file))
-            if self.target_size:
-                label = label.resize((self.target_size[1], self.target_size[0]))
             x = img_to_array(img, dim_ordering=self.dim_ordering)
             y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
+            # do padding
+            if self.target_size:
+                img_w, img_h = img.size
+                long_side = max(img_h, img_w, self.target_size[0], self.target_size[1])
+                pad_w = long_side - img_w
+                pad_h = long_side - img_h
+                if self.dim_ordering == 'th':
+                    x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant')
+                    y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.ignore_label)
+                elif self.dim_ordering == 'tf':
+                    x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
+                    y = np.lib.pad(y, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=self.ignore_label)
             if self.ignore_label:
                 y[np.where(y==self.ignore_label)] = self.nb_classes
 
@@ -133,6 +172,8 @@ class SegDataGenerator(object):
                  channel_shift_range=0.,
                  fill_mode='constant',
                  cval=0.,
+                 crop_mode = 'none',
+                 crop_size = (0, 0),
                  horizontal_flip=False,
                  vertical_flip=False,
                  rescale=None,
@@ -150,6 +191,9 @@ class SegDataGenerator(object):
             raise Exception('dim_ordering should be "tf" (channel after row and '
                             'column) or "th" (channel before row and column). '
                             'Received arg: ', dim_ordering)
+        if crop_mode not in {'none', 'random', 'center'}:
+            raise Exception('crop_mode should be "none" or "random" or "center" '
+                            'Received arg: ', crop_mode)
         self.dim_ordering = dim_ordering
         if dim_ordering == 'th':
             self.channel_index = 1
@@ -175,6 +219,8 @@ class SegDataGenerator(object):
                             class_mode='sparse',
                             batch_size=32, shuffle=True, seed=None,
                             save_to_dir=None, save_prefix='', save_format='jpeg'):
+        if self.crop_mode == 'random' or self.crop_mode == 'center':
+            target_size = self.crop_size
         return SegDirectoryIterator(
             file_path, self,
             data_dir=data_dir, data_suffix=data_suffix,
@@ -269,6 +315,15 @@ class SegDataGenerator(object):
             if np.random.random() < 0.5:
                 x = flip_axis(x, img_row_index)
                 y = flip_axis(y, img_row_index)
+
+        if self.dim_ordering == 'tf':
+            x = np.rollaxis(x, -1, 0)
+        if self.crop_mode == 'center':
+            x, y = pair_center_crop(x, y, self.crop_size)
+        elif self.crop_mode == 'random':
+            x, y = pair_random_crop(x, y, self.crop_size)
+        if self.dim_ordering == 'tf':
+            x = np.rollaxis(x, 0, 3)
 
         # TODO:
         # channel-wise normalization

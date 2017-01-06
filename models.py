@@ -13,72 +13,12 @@ import keras.backend as K
 import tensorflow as tf
 
 from utils.get_weights_path import *
+from utils.basics import *
 from utils.resnet_helpers import *
+from utils.BilinearUpSampling import *
 
-def resize_images_bilinear(X, height_factor, width_factor, dim_ordering):
-    '''Resizes the images contained in a 4D tensor of shape
-    - [batch, channels, height, width] (for 'th' dim_ordering)
-    - [batch, height, width, channels] (for 'tf' dim_ordering)
-    by a factor of (height_factor, width_factor). Both factors should be
-    positive integers.
-    '''
-    if dim_ordering == 'th':
-        original_shape = K.int_shape(X)
-        new_shape = tf.shape(X)[2:]
-        new_shape *= tf.constant(np.array([height_factor, width_factor]).astype('int32'))
-        X = permute_dimensions(X, [0, 2, 3, 1])
-        X = tf.image.resize_bilinear(X, new_shape)
-        X = permute_dimensions(X, [0, 3, 1, 2])
-        X.set_shape((None, None, original_shape[2] * height_factor, original_shape[3] * width_factor))
-        return X
-    elif dim_ordering == 'tf':
-        original_shape = K.int_shape(X)
-        new_shape = tf.shape(X)[1:3]
-        new_shape *= tf.constant(np.array([height_factor, width_factor]).astype('int32'))
-        X = tf.image.resize_bilinear(X, new_shape)
-        X.set_shape((None, original_shape[1] * height_factor, original_shape[2] * width_factor, None))
-        return X
-    else:
-        raise Exception('Invalid dim_ordering: ' + dim_ordering)
 
-class BilinearUpSampling2D(Layer):
-    def __init__(self, size=(2, 2), dim_ordering='default', **kwargs):
-        if dim_ordering == 'default':
-            dim_ordering = K.image_dim_ordering()
-        self.size = tuple(size)
-        assert dim_ordering in {'tf', 'th'}, 'dim_ordering must be in {tf, th}'
-        self.dim_ordering = dim_ordering
-        self.input_spec = [InputSpec(ndim=4)]
-        super(BilinearUpSampling2D, self).__init__(**kwargs)
-
-    def get_output_shape_for(self, input_shape):
-        if self.dim_ordering == 'th':
-            width = self.size[0] * input_shape[2] if input_shape[2] is not None else None
-            height = self.size[1] * input_shape[3] if input_shape[3] is not None else None
-            return (input_shape[0],
-                    input_shape[1],
-                    width,
-                    height)
-        elif self.dim_ordering == 'tf':
-            width = self.size[0] * input_shape[1] if input_shape[1] is not None else None
-            height = self.size[1] * input_shape[2] if input_shape[2] is not None else None
-            return (input_shape[0],
-                    width,
-                    height,
-                    input_shape[3])
-        else:
-            raise Exception('Invalid dim_ordering: ' + self.dim_ordering)
-
-    def call(self, x, mask=None):
-        return resize_images_bilinear(x, self.size[0], self.size[1],
-                               self.dim_ordering)
-
-    def get_config(self):
-        config = {'size': self.size}
-        base_config = super(BilinearUpSampling2D, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_shape=None):
+def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
     else:
@@ -117,7 +57,7 @@ def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_shape=None):
     x = Convolution2D(4096, 1, 1, activation='relu', border_mode='same', name='fc2', W_regularizer=l2(weight_decay))(x)
     x = Dropout(0.5)(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(size=(32, 32))(x)
 
@@ -127,7 +67,7 @@ def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_shape=None):
     model.load_weights(weights_path, by_name=True)
     return model
 
-def AtrousFCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_shape=None):
+def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
     else:
@@ -166,7 +106,7 @@ def AtrousFCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_shape=None):
     x = Convolution2D(4096, 1, 1, activation='relu', border_mode='same', name='fc2', W_regularizer=l2(weight_decay))(x)
     x = Dropout(0.5)(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(size=(16, 16))(x)
 
@@ -210,7 +150,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, ba
     x = identity_block(3, [512, 512, 2048], stage=5, block='b')(x)
     x = identity_block(3, [512, 512, 2048], stage=5, block='c')(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(size=(32, 32))(x)
 
@@ -219,7 +159,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, ba
     model.load_weights(weights_path, by_name=True)
     return model
 
-def AtrousFCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.1, batch_shape=None):
+def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
     else:
@@ -252,8 +192,8 @@ def AtrousFCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0
     x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='b', weight_decay=weight_decay, atrous_rate=(2, 2), batch_momentum=batch_momentum)(x)
     x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='c', weight_decay=weight_decay, atrous_rate=(2, 2), batch_momentum=batch_momentum)(x)
     #classifying layer
-    #x = AtrousConvolution2D(21, 5, 5, atrous_rate=(3, 3), init='normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
-    x = Convolution2D(21, 1, 1, init='normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    #x = AtrousConvolution2D(21, 3, 3, atrous_rate=(2, 2), init='normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
     x = BilinearUpSampling2D(size=(16, 16))(x)
 
     model = Model(img_input, x)
