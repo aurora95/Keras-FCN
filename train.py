@@ -38,6 +38,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
         lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
+        print 'lr: %f' % lr
         return lr
     scheduler = LearningRateScheduler(lr_scheduler)
     ######################## tfboard ###########################
@@ -90,7 +91,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'FCN_Resnet50_32s'
+    model_name = 'AtrousFCN_Resnet50_16s'
     batch_size = 8
     batchnorm_momentum = 0.9
     nb_epoch = 200
@@ -108,4 +109,3 @@ if __name__ == '__main__':
     K.set_session(session)
     train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
             data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=False)
-    evaluate(model_name, (505, 505), 21, 1)

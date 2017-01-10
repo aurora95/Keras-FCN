@@ -9,7 +9,7 @@ def center_crop(x, center_crop_size, **kwargs):
     halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
     return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
 
-def pair_center_crop(x, center_crop_size, **kwargs):
+def pair_center_crop(x, y, center_crop_size, **kwargs):
     centerw, centerh = x.shape[1]//2, x.shape[2]//2
     halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
     return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh], y[centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
@@ -40,6 +40,7 @@ class SegDirectoryIterator(Iterator):
     def __init__(self, file_path, seg_data_generator,
                  data_dir, data_suffix,
                  label_dir, label_suffix, nb_classes, ignore_label=255,
+                 crop_mode='none', label_cval=0.,
                  target_size=None, color_mode='rgb',
                  dim_ordering='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
@@ -53,6 +54,8 @@ class SegDirectoryIterator(Iterator):
         self.seg_data_generator = seg_data_generator
         self.target_size = tuple(target_size)
         self.ignore_label = ignore_label
+        self.crop_mode = crop_mode
+        self.label_cval=label_cval
         if color_mode not in {'rgb', 'grayscale'}:
             raise ValueError('Invalid color mode:', color_mode,
                              '; expected "rgb" or "grayscale".')
@@ -117,20 +120,24 @@ class SegDirectoryIterator(Iterator):
             label_file= self.label_files[j]
             img = load_img(os.path.join(self.data_dir, data_file), grayscale=grayscale, target_size=None)
             label = Image.open(os.path.join(self.label_dir, label_file))
-            x = img_to_array(img, dim_ordering=self.dim_ordering)
-            y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
+
             # do padding
             if self.target_size:
-                img_w, img_h = img.size
-                long_side = max(img_h, img_w, self.target_size[0], self.target_size[1])
-                pad_w = long_side - img_w
-                pad_h = long_side - img_h
-                if self.dim_ordering == 'th':
-                    x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant')
-                    y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.ignore_label)
-                elif self.dim_ordering == 'tf':
-                    x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
-                    y = np.lib.pad(y, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=self.ignore_label)
+                if self.crop_mode != 'none':
+                    x = img_to_array(img, dim_ordering=self.dim_ordering)
+                    y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
+                    img_w, img_h = img.size
+                    pad_w = max(self.target_size[1] - img_w, 0)
+                    pad_h = max(self.target_size[0] - img_h, 0)
+                    if self.dim_ordering == 'th':
+                        x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant')
+                        y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.label_cval)
+                    elif self.dim_ordering == 'tf':
+                        x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
+                        y = np.lib.pad(y, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=self.label_cval)
+                else:
+                    x = img_to_array(img.resize((self.target_size[1], self.target_size[0]), Image.BILINEAR), dim_ordering=self.dim_ordering)
+                    y = img_to_array(label.resize((self.target_size[1], self.target_size[0]), Image.NEAREST), dim_ordering=self.dim_ordering).astype(int)
             if self.ignore_label:
                 y[np.where(y==self.ignore_label)] = self.nb_classes
 
@@ -139,6 +146,8 @@ class SegDirectoryIterator(Iterator):
                 batch_y = np.zeros((current_batch_size,) + y.shape)
             x, y = self.seg_data_generator.random_transform(x, y)
             x = self.seg_data_generator.standardize(x)
+            #array_to_img(x).show()
+            #exit()
             batch_x[i] = x
             batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
@@ -172,6 +181,7 @@ class SegDataGenerator(object):
                  channel_shift_range=0.,
                  fill_mode='constant',
                  cval=0.,
+                 label_cval=0.,
                  crop_mode = 'none',
                  crop_size = (0, 0),
                  horizontal_flip=False,
@@ -225,6 +235,7 @@ class SegDataGenerator(object):
             file_path, self,
             data_dir=data_dir, data_suffix=data_suffix,
             label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes, ignore_label=ignore_label,
+            crop_mode=self.crop_mode, label_cval=self.label_cval,
             target_size=target_size, color_mode=color_mode,
             dim_ordering=self.dim_ordering, class_mode=class_mode,
             batch_size=batch_size, shuffle=shuffle, seed=seed,
@@ -254,6 +265,10 @@ class SegDataGenerator(object):
         img_row_index = self.row_index - 1
         img_col_index = self.col_index - 1
         img_channel_index = self.channel_index - 1
+        if self.crop_mode == 'none':
+            crop_size = (x.shape[img_col_index], x.shape[img_row_index])
+        else:
+            crop_size = self.crop_size
 
         assert x.shape[img_row_index] == y.shape[img_row_index] and x.shape[img_col_index] == y.shape[
             img_col_index], 'DATA ERROR: Different shape of data and label!\ndata shape: %s, label shape: %s' % (str(x.shape), str(y.shape))
@@ -267,12 +282,12 @@ class SegDataGenerator(object):
                                     [np.sin(theta), np.cos(theta), 0],
                                     [0, 0, 1]])
         if self.height_shift_range:
-            tx = np.random.uniform(-self.height_shift_range, self.height_shift_range) * x.shape[img_row_index]
+            tx = np.random.uniform(-self.height_shift_range, self.height_shift_range) * crop_size[1]#* x.shape[img_row_index]
         else:
             tx = 0
 
         if self.width_shift_range:
-            ty = np.random.uniform(-self.width_shift_range, self.width_shift_range) * x.shape[img_col_index]
+            ty = np.random.uniform(-self.width_shift_range, self.width_shift_range) * crop_size[0] #* x.shape[img_col_index]
         else:
             ty = 0
 
@@ -302,7 +317,7 @@ class SegDataGenerator(object):
         x = apply_transform(x, transform_matrix, img_channel_index,
                             fill_mode=self.fill_mode, cval=self.cval)
         y = apply_transform(y, transform_matrix, img_channel_index,
-                            fill_mode='constant', cval=0.0)
+                            fill_mode='constant', cval=self.label_cval)
         if self.channel_shift_range != 0:
             x = random_channel_shift(x, self.channel_shift_range, img_channel_index)
 
