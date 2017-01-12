@@ -40,7 +40,7 @@ class SegDirectoryIterator(Iterator):
     def __init__(self, file_path, seg_data_generator,
                  data_dir, data_suffix,
                  label_dir, label_suffix, nb_classes, ignore_label=255,
-                 crop_mode='none', label_cval=0.,
+                 crop_mode='none', label_cval=255., pad_size=None,
                  target_size=None, color_mode='rgb',
                  dim_ordering='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
@@ -56,6 +56,7 @@ class SegDirectoryIterator(Iterator):
         self.ignore_label = ignore_label
         self.crop_mode = crop_mode
         self.label_cval=label_cval
+        self.pad_size = pad_size
         if color_mode not in {'rgb', 'grayscale'}:
             raise ValueError('Invalid color mode:', color_mode,
                              '; expected "rgb" or "grayscale".')
@@ -87,6 +88,8 @@ class SegDirectoryIterator(Iterator):
                              '; expected one of '
                              '"sparse", or None.')
         self.class_mode = class_mode
+        if save_to_dir:
+            self.palette = None
         self.save_to_dir = save_to_dir
         self.save_prefix = save_prefix
         self.save_format = save_format
@@ -120,6 +123,8 @@ class SegDirectoryIterator(Iterator):
             label_file= self.label_files[j]
             img = load_img(os.path.join(self.data_dir, data_file), grayscale=grayscale, target_size=None)
             label = Image.open(os.path.join(self.label_dir, label_file))
+            if self.save_to_dir and self.palette is None:
+                self.palette = label.palette
 
             # do padding
             if self.target_size:
@@ -127,8 +132,12 @@ class SegDirectoryIterator(Iterator):
                     x = img_to_array(img, dim_ordering=self.dim_ordering)
                     y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
                     img_w, img_h = img.size
-                    pad_w = max(self.target_size[1] - img_w, 0)
-                    pad_h = max(self.target_size[0] - img_h, 0)
+                    if self.pad_size:
+                        pad_w = max(self.pad_size[1] - img_w, 0)
+                        pad_h = max(self.pad_size[0] - img_h, 0)
+                    else:
+                        pad_w = max(self.target_size[1] - img_w, 0)
+                        pad_h = max(self.target_size[0] - img_h, 0)
                     if self.dim_ordering == 'th':
                         x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant')
                         y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.label_cval)
@@ -138,27 +147,30 @@ class SegDirectoryIterator(Iterator):
                 else:
                     x = img_to_array(img.resize((self.target_size[1], self.target_size[0]), Image.BILINEAR), dim_ordering=self.dim_ordering)
                     y = img_to_array(label.resize((self.target_size[1], self.target_size[0]), Image.NEAREST), dim_ordering=self.dim_ordering).astype(int)
-            if self.ignore_label:
-                y[np.where(y==self.ignore_label)] = self.nb_classes
 
             if self.target_size == None:
                 batch_x = np.zeros((current_batch_size,) + x.shape)
                 batch_y = np.zeros((current_batch_size,) + y.shape)
+
             x, y = self.seg_data_generator.random_transform(x, y)
             x = self.seg_data_generator.standardize(x)
-            #array_to_img(x).show()
-            #exit()
+
+            if self.ignore_label:
+                y[np.where(y==self.ignore_label)] = self.nb_classes
+            
             batch_x[i] = x
             batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
             for i in range(current_batch_size):
                 img = array_to_img(batch_x[i], self.dim_ordering, scale=True)
-                fname = '{prefix}_{index}_{hash}.{format}'.format(prefix=self.save_prefix,
-                                                                  index=current_index + i,
-                                                                  hash=np.random.randint(1e4),
-                                                                  format=self.save_format)
-                img.save(os.path.join(self.save_to_dir, fname))
+                label = Image.fromarray(batch_y[i][:, :, 0].astype('uint8'), mode='P')
+                label.palette = self.palette
+                fname = '{prefix}_{index}_{hash}'.format(prefix=self.save_prefix,
+                                                                index=current_index + i,
+                                                                hash=np.random.randint(1e4))
+                img.save(os.path.join(self.save_to_dir, 'img_' + fname + '.{format}'.format(format=self.save_format)))
+                label.save(os.path.join(self.save_to_dir, 'label_' + fname + '.png'))
         # return
         if self.class_mode == 'sparse':
             return batch_x, batch_y
@@ -181,9 +193,10 @@ class SegDataGenerator(object):
                  channel_shift_range=0.,
                  fill_mode='constant',
                  cval=0.,
-                 label_cval=0.,
+                 label_cval=255.,
                  crop_mode = 'none',
                  crop_size = (0, 0),
+                 pad_size = None,
                  horizontal_flip=False,
                  vertical_flip=False,
                  rescale=None,
@@ -235,7 +248,7 @@ class SegDataGenerator(object):
             file_path, self,
             data_dir=data_dir, data_suffix=data_suffix,
             label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes, ignore_label=ignore_label,
-            crop_mode=self.crop_mode, label_cval=self.label_cval,
+            crop_mode=self.crop_mode, label_cval=self.label_cval, pad_size=self.pad_size,
             target_size=target_size, color_mode=color_mode,
             dim_ordering=self.dim_ordering, class_mode=class_mode,
             batch_size=batch_size, shuffle=shuffle, seed=seed,
@@ -314,10 +327,12 @@ class SegDataGenerator(object):
 
         h, w = x.shape[img_row_index], x.shape[img_col_index]
         transform_matrix = transform_matrix_offset_center(transform_matrix, h, w)
+
         x = apply_transform(x, transform_matrix, img_channel_index,
                             fill_mode=self.fill_mode, cval=self.cval)
         y = apply_transform(y, transform_matrix, img_channel_index,
                             fill_mode='constant', cval=self.label_cval)
+
         if self.channel_shift_range != 0:
             x = random_channel_shift(x, self.channel_shift_range, img_channel_index)
 

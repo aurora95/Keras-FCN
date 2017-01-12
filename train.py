@@ -65,8 +65,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
 
     # set data generator and train
-    train_datagen = SegDataGenerator(channelwise_center=True, zoom_range=0.5, rotation_range=30., crop_mode='random', crop_size=target_size,
-                                    width_shift_range=0.1, height_shift_range=0.1, fill_mode='constant', horizontal_flip=True)
+    train_datagen = SegDataGenerator(channelwise_center=True, zoom_range=[0.5, 2.0],
+                                    crop_mode='random', crop_size=target_size, pad_size=(512, 512),
+                                    fill_mode='constant', horizontal_flip=True)
     train_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
     val_datagen = SegDataGenerator(channelwise_center=True, fill_mode='constant')
     val_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
@@ -80,7 +81,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                     file_path=train_file_path, data_dir=data_dir, data_suffix='.jpg',
                                     label_dir=label_dir, label_suffix='.png', nb_classes=nb_classes,
                                     target_size=target_size, color_mode='rgb',
-                                    batch_size=batch_size, shuffle=True
+                                    batch_size=batch_size, shuffle=False
                                 ),
                                 samples_per_epoch=get_file_len(train_file_path),
                                 nb_epoch=nb_epoch,
@@ -91,7 +92,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Resnet50_16s'
+    model_name = 'AtrousFCN_Vgg16_16s'
     batch_size = 8
     batchnorm_momentum = 0.9
     nb_epoch = 200

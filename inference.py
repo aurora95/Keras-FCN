@@ -13,8 +13,8 @@ from models import *
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    model_name = 'AtrousFCN_Resnet50_16s'
-    image_size = (512, 512)
+    model_name = 'AtrousFCN_Vgg16_16s'
+    image_size = (320, 320)
     batch_shape = (1,)+ image_size + (3,)
     save_path = os.path.join(current_dir, 'Models/'+model_name)
     model_path = os.path.join(save_path, "model.json")
@@ -47,8 +47,8 @@ if __name__ == '__main__':
         long_side = max(img_h, img_w, image_size[0], image_size[1])
         pad_w = long_side - img_w
         pad_h = long_side - img_h
-        image = np.lib.pad(image, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
-        #image = cv2.resize(image, image_size)
+        #image = np.lib.pad(image, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
+        image = cv2.resize(image, image_size)
 
         image = np.expand_dims(image, axis=0)
 
@@ -57,8 +57,8 @@ if __name__ == '__main__':
 
         temp = Image.fromarray(result, mode='P')
         temp.palette = label.palette
-        #temp.resize(label_size, resample=Image.BILINEAR)
-        temp = temp.crop((pad_w/2, pad_h/2, pad_w/2+img_w, pad_h/2+img_h))
+        temp = temp.resize(label_size, resample=Image.BILINEAR)
+        #temp = temp.crop((pad_w/2, pad_h/2, pad_w/2+img_w, pad_h/2+img_h))
         temp.show(title='result')
         print result
         print np.max(result)

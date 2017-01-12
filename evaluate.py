@@ -60,7 +60,7 @@ def evaluate(model_name, target_size, nb_classes, batch_size, val_file_path, dat
     print '{}s used.\n'.format(duration)
 
 if __name__ == '__main__':
-    model_name = 'FeatureContext_Resnet50_16s'
+    model_name = 'AtrousFCN_Vgg16_16s'
     target_size = (512, 512)
     nb_classes = 21
     batch_size = 1
