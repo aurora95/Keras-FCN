@@ -40,7 +40,7 @@ class SegDirectoryIterator(Iterator):
     def __init__(self, file_path, seg_data_generator,
                  data_dir, data_suffix,
                  label_dir, label_suffix, nb_classes, ignore_label=255,
-                 crop_mode='none', label_cval=255., pad_size=None,
+                 crop_mode='none', label_cval=255, pad_size=None,
                  target_size=None, color_mode='rgb',
                  dim_ordering='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
@@ -157,7 +157,7 @@ class SegDirectoryIterator(Iterator):
 
             if self.ignore_label:
                 y[np.where(y==self.ignore_label)] = self.nb_classes
-            
+
             batch_x[i] = x
             batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
@@ -193,7 +193,7 @@ class SegDataGenerator(object):
                  channel_shift_range=0.,
                  fill_mode='constant',
                  cval=0.,
-                 label_cval=255.,
+                 label_cval=255,
                  crop_mode = 'none',
                  crop_size = (0, 0),
                  pad_size = None,
