@@ -81,7 +81,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                     file_path=train_file_path, data_dir=data_dir, data_suffix='.jpg',
                                     label_dir=label_dir, label_suffix='.png', nb_classes=nb_classes,
                                     target_size=target_size, color_mode='rgb',
-                                    batch_size=batch_size, shuffle=False
+                                    batch_size=batch_size, shuffle=True
                                 ),
                                 samples_per_epoch=get_file_len(train_file_path),
                                 nb_epoch=nb_epoch,
