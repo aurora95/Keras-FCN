@@ -48,7 +48,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
     resume_from_epoch = 0
 
-    model = globals()[model_name](weight_decay, batch_shape=batch_shape, batch_momentum=batchnorm_momentum)
+    model = globals()[model_name](weight_decay=weight_decay, batch_shape=batch_shape, batch_momentum=batchnorm_momentum)
     sgd = SGD(lr=0.001, momentum=0.9)
     model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
     model_path = os.path.join(save_path, "model.json")
