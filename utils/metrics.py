@@ -15,8 +15,8 @@ def sparse_accuracy_ignoring_last_label(y_true, y_pred):
 
     return K.sum(tf.to_float(legal_labels & K.equal(K.argmax(y_true, axis=-1), K.argmax(y_pred, axis=-1)))) / K.sum(tf.to_float(legal_labels))
 
-
-def mean_iou_ignoring_last_label(y_true, y_pred):
+# This IOU implementation is wrong!!!
+'''def mean_iou_ignoring_last_label(y_true, y_pred):
     batch_size = K.int_shape(y_pred)[0]
     y_true_list = tf.unpack(y_true, num=batch_size, axis=0)
     y_pred_list = tf.unpack(y_pred, num=batch_size, axis=0)
@@ -44,4 +44,4 @@ def mean_iou_ignoring_last_label(y_true, y_pred):
         iou = K.sum(intersection / (union + K.epsilon())) / total_union
         mean_iou = mean_iou + iou
     mean_iou = mean_iou / batch_size
-    return mean_iou
+    return mean_iou'''

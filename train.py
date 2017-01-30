@@ -16,7 +16,6 @@ from utils.loss_function import *
 from utils.metrics import *
 from utils.SegDataGenerator import *
 import time
-from evaluate import evaluate
 
 
 def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
@@ -46,11 +45,12 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
 
     ####################### make model ########################
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
-    resume_from_epoch = 0
 
     model = globals()[model_name](weight_decay=weight_decay, batch_shape=batch_shape, batch_momentum=batchnorm_momentum)
     sgd = SGD(lr=0.001, momentum=0.9)
     model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
+    if resume_training:
+        model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
     # save model structure
     f = open(model_path, 'w')
@@ -65,12 +65,14 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
 
     # set data generator and train
-    train_datagen = SegDataGenerator(channelwise_center=True, zoom_range=[0.5, 2.0],
-                                    crop_mode='random', crop_size=target_size, pad_size=(512, 512),
-                                    fill_mode='constant', horizontal_flip=True)
-    train_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
-    val_datagen = SegDataGenerator(channelwise_center=True, fill_mode='constant')
-    val_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
+    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=False,
+                                    crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
+                                    rotation_range=0., shear_range=3.14/16, horizontal_flip=True,
+                                    fill_mode='constant', label_cval=255)
+    #train_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
+    #train_datagen.set_ch_mean(np.array([103.939, 116.779, 123.68]))
+    #val_datagen = SegDataGenerator(channelwise_center=True, fill_mode='constant', label_cval=255, crop_mode='center', crop_size=target_size, pad_size=target_size,)
+    #val_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
     def get_file_len(file_path):
         fp = open(file_path)
         lines = fp.readlines()
@@ -81,32 +83,41 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                     file_path=train_file_path, data_dir=data_dir, data_suffix='.jpg',
                                     label_dir=label_dir, label_suffix='.png', nb_classes=nb_classes,
                                     target_size=target_size, color_mode='rgb',
-                                    batch_size=batch_size, shuffle=True
+                                    batch_size=batch_size, shuffle=True,
+                                    #save_to_dir='Images/'
                                 ),
                                 samples_per_epoch=get_file_len(train_file_path),
                                 nb_epoch=nb_epoch,
-                                callbacks=[scheduler, tfboard, checkpoint],
-				                nb_worker=4
+                                callbacks=[scheduler, checkpoint],
+				                nb_worker=4,
+                                #validation_data=val_datagen.flow_from_directory(
+                                #    file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
+                                #    label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
+                                #    target_size=target_size, color_mode='rgb',
+                                #    batch_size=batch_size, shuffle=False
+                                #),
+                                #nb_val_samples = 64
                             )
 
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Vgg16_16s'
+    model_name = 'AtrousFCN_Resnet50_16s'
     batch_size = 8
-    batchnorm_momentum = 0.9
-    nb_epoch = 200
-    lr_base = 0.005
+    batchnorm_momentum = 0.95
+    nb_epoch = 250
+    lr_base = 0.01 * (float(batch_size) / 16)
     lr_power = 0.9
+    resume_training=False
     weight_decay = 0.0001
     nb_classes = 21
     target_size = (320, 320)
-    train_file_path = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/train.txt'
-    val_file_path   = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/val.txt'
+    train_file_path = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/train.txt' #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    val_file_path   = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/val64.txt'
     data_dir        = '/home/aurora/Learning/Data/VOC2012/JPEGImages'
     label_dir       = '/home/aurora/Learning/Data/VOC2012/SegmentationClass'
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)
     train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
-            data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=False)
+            data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training)

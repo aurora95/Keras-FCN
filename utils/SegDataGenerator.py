@@ -1,36 +1,63 @@
 from keras.preprocessing.image import *
+from keras.applications.imagenet_utils import preprocess_input
 from PIL import Image
 import numpy as np
 import os
 import cv2
 
-def center_crop(x, center_crop_size, **kwargs):
-    centerw, centerh = x.shape[1]//2, x.shape[2]//2
-    halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
-    return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
+def center_crop(x, center_crop_size, dim_ordering, **kwargs):
+    if dim_ordering=='th':
+        centerw, centerh = x.shape[1]//2, x.shape[2]//2
+    elif dim_ordering=='tf':
+        centerw, centerh = x.shape[0]//2, x.shape[1]//2
+    lw, lh = center_crop_size[0]//2, center_crop_size[1]//2
+    rw, rh = center_crop_size[0]-lw, center_crop_size[1]-lh
+    if dim_ordering=='th':
+        return x[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh]
+    elif dim_ordering=='tf':
+        return x[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :]
 
-def pair_center_crop(x, y, center_crop_size, **kwargs):
-    centerw, centerh = x.shape[1]//2, x.shape[2]//2
-    halfw, halfh = center_crop_size[0]//2, center_crop_size[1]//2
-    return x[:, centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh], y[centerw-halfw:centerw+halfw,centerh-halfh:centerh+halfh]
+def pair_center_crop(x, y, center_crop_size, dim_ordering, **kwargs):
+    if dim_ordering=='th':
+        centerw, centerh = x.shape[1]//2, x.shape[2]//2
+    elif dim_ordering=='tf':
+        centerw, centerh = x.shape[0]//2, x.shape[1]//2
+    lw, lh = center_crop_size[0]//2, center_crop_size[1]//2
+    rw, rh = center_crop_size[0]-lw, center_crop_size[1]-lh
+    if dim_ordering=='th':
+        return x[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh], y[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh]
+    elif dim_ordering=='tf':
+        return x[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :], y[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :]
 
-def random_crop(x, random_crop_size, sync_seed=None, **kwargs):
+def random_crop(x, random_crop_size, dim_ordering, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
-    w, h = x.shape[1], x.shape[2]
+    if dim_ordering=='th':
+        w, h = x.shape[1], x.shape[2]
+    elif dim_ordering=='tf':
+        w, h = x.shape[0], x.shape[1]
     rangew = (w - random_crop_size[0]) // 2
     rangeh = (h - random_crop_size[1]) // 2
     offsetw = 0 if rangew == 0 else np.random.randint(rangew)
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
-    return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
+    if dim_ordering=='th':
+        return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
+    elif dim_ordering=='tf':
+        return x[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :]
 
-def pair_random_crop(x, y, random_crop_size, sync_seed=None, **kwargs):
+def pair_random_crop(x, y, random_crop_size, dim_ordering, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
-    w, h = x.shape[1], x.shape[2]
+    if dim_ordering=='th':
+        w, h = x.shape[1], x.shape[2]
+    elif dim_ordering=='tf':
+        w, h = x.shape[0], x.shape[1]
     rangew = (w - random_crop_size[0]) // 2
     rangeh = (h - random_crop_size[1]) // 2
     offsetw = 0 if rangew == 0 else np.random.randint(rangew)
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
-    return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]], y[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
+    if dim_ordering=='th':
+        return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]], y[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
+    elif dim_ordering=='tf':
+        return x[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :], y[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :]
 
 class SegDirectoryIterator(Iterator):
     '''
@@ -115,7 +142,7 @@ class SegDirectoryIterator(Iterator):
         # The transformation of images is not under thread lock so it can be done in parallel
         if self.target_size:
             batch_x = np.zeros((current_batch_size,) + self.image_shape)
-            batch_y = np.zeros((current_batch_size,) + self.label_shape)
+            batch_y = np.zeros((current_batch_size,) + self.label_shape, dtype=int)
         grayscale = self.color_mode == 'grayscale'
         # build batch of image data and labels
         for i, j in enumerate(index_array):
@@ -139,10 +166,10 @@ class SegDirectoryIterator(Iterator):
                         pad_w = max(self.target_size[1] - img_w, 0)
                         pad_h = max(self.target_size[0] - img_h, 0)
                     if self.dim_ordering == 'th':
-                        x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant')
+                        x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=0.)
                         y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.label_cval)
                     elif self.dim_ordering == 'tf':
-                        x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant')
+                        x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=0.)
                         y = np.lib.pad(y, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=self.label_cval)
                 else:
                     x = img_to_array(img.resize((self.target_size[1], self.target_size[0]), Image.BILINEAR), dim_ordering=self.dim_ordering)
@@ -164,7 +191,9 @@ class SegDirectoryIterator(Iterator):
         if self.save_to_dir:
             for i in range(current_batch_size):
                 img = array_to_img(batch_x[i], self.dim_ordering, scale=True)
-                label = Image.fromarray(batch_y[i][:, :, 0].astype('uint8'), mode='P')
+                label = batch_y[i][:, :, 0].astype('uint8')
+                label[np.where(label==self.nb_classes)] = self.ignore_label
+                label = Image.fromarray(label, mode='P')
                 label.palette = self.palette
                 fname = '{prefix}_{index}_{hash}'.format(prefix=self.save_prefix,
                                                                 index=current_index + i,
@@ -172,6 +201,7 @@ class SegDirectoryIterator(Iterator):
                 img.save(os.path.join(self.save_to_dir, 'img_' + fname + '.{format}'.format(format=self.save_format)))
                 label.save(os.path.join(self.save_to_dir, 'label_' + fname + '.png'))
         # return
+        batch_x = preprocess_input(batch_x)
         if self.class_mode == 'sparse':
             return batch_x, batch_y
         else:
@@ -190,6 +220,7 @@ class SegDataGenerator(object):
                  height_shift_range=0.,
                  shear_range=0.,
                  zoom_range=0.,
+                 zoom_maintain_shape=True,
                  channel_shift_range=0.,
                  fill_mode='constant',
                  cval=0.,
@@ -238,7 +269,7 @@ class SegDataGenerator(object):
 
     def flow_from_directory(self, file_path, data_dir, data_suffix,
                             label_dir, label_suffix, nb_classes, ignore_label=255,
-                            target_size=(256, 256), color_mode='rgb',
+                            target_size=None, color_mode='rgb',
                             class_mode='sparse',
                             batch_size=32, shuffle=True, seed=None,
                             save_to_dir=None, save_prefix='', save_format='jpeg'):
@@ -319,6 +350,8 @@ class SegDataGenerator(object):
             zx, zy = 1, 1
         else:
             zx, zy = np.random.uniform(self.zoom_range[0], self.zoom_range[1], 2)
+        if self.zoom_maintain_shape:
+            zy = zx
         zoom_matrix = np.array([[zx, 0, 0],
                                 [0, zy, 0],
                                 [0, 0, 1]])
@@ -346,14 +379,10 @@ class SegDataGenerator(object):
                 x = flip_axis(x, img_row_index)
                 y = flip_axis(y, img_row_index)
 
-        if self.dim_ordering == 'tf':
-            x = np.rollaxis(x, -1, 0)
         if self.crop_mode == 'center':
-            x, y = pair_center_crop(x, y, self.crop_size)
+            x, y = pair_center_crop(x, y, self.crop_size, self.dim_ordering)
         elif self.crop_mode == 'random':
-            x, y = pair_random_crop(x, y, self.crop_size)
-        if self.dim_ordering == 'tf':
-            x = np.rollaxis(x, 0, 3)
+            x, y = pair_random_crop(x, y, self.crop_size, self.dim_ordering)
 
         # TODO:
         # channel-wise normalization

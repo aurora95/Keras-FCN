@@ -7,64 +7,73 @@ import time
 import cv2
 from PIL import Image
 from keras.preprocessing.image import *
+from keras.utils.np_utils import to_categorical
 from keras.models import load_model
 import keras.backend as K
-from keras.optimizers import SGD
-from utils.SegDataGenerator import *
-from utils.loss_function import *
-from utils.metrics import *
 
 from models import *
+from inference import inference
 
-def get_file_len(file_path):
-    fp = open(file_path)
-    lines = fp.readlines()
-    fp.close()
-    return len(lines)
+def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
+    conf_m = zeros((nb_classes,nb_classes), dtype=float)
+    total = 0
+    #mean_acc = 0.
+    for img_num in image_list:
+        img_num = img_num.strip('\n')
+        total += 1
+        print '#%d: %s'%(total,img_num)
+        pred = img_to_array(Image.open('%s/%s.png'%(res_dir, img_num)), dim_ordering='tf').astype(int)
+        label = img_to_array(Image.open('%s/%s.png'%(label_dir, img_num)), dim_ordering='tf').astype(int)
+        flat_pred = np.ravel(pred)
+        flat_label = np.ravel(label)
+        #acc = 0.
+        for p,l in zip(flat_pred,flat_label):
+            if l==255:
+                continue
+            conf_m[l,p] += 1
+        #    if l==p:
+        #        acc+=1
+        #acc /= flat_pred.shape[0]
+        #mean_acc += acc
+    #mean_acc /= total
+    #print 'mean acc: %f'%mean_acc
+    I = np.diag(conf_m)
+    U = np.sum(conf_m, axis=0) + np.sum(conf_m, axis=1) - I
+    IOU = I/U
+    meanIOU = np.mean(IOU)
+    return conf_m, IOU, meanIOU
 
-def evaluate(model_name, target_size, nb_classes, batch_size, val_file_path, data_dir, label_dir):
+def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_file_path, data_dir, label_dir):
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    val_samples = 1448
-    batch_shape = (batch_size,)+ target_size + (3,)
-    save_path = os.path.join(current_dir, 'Models/'+model_name)
-    model_path = os.path.join(save_path, "model.json")
-    checkpoint_path = os.path.join(save_path, 'model.hdf5')
-
-    config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
-    session = tf.Session(config=config)
-    K.set_session(session)
-
-    model = globals()[model_name](0.0, batch_shape=batch_shape)
-    model.load_weights(checkpoint_path, by_name=True)
-
-    #model.summary()
-    print 'model loaded'
-
-    val_datagen = SegDataGenerator(channelwise_center=True, fill_mode='constant', label_cval=255, crop_mode='center', crop_size=target_size)
-    val_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
-    sgd = SGD(lr=0.0001, momentum=0.9)
-    model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label, mean_iou_ignoring_last_label])
-    print 'model compiled'
+    save_dir = os.path.join(current_dir, 'Models/'+model_name+'/res/')
+    if os.path.exists(save_dir) == False:
+        os.mkdir(save_dir)
+    fp = open(val_file_path)
+    image_list = fp.readlines()
+    fp.close()
 
     start_time = time.time()
-    print model.evaluate_generator(
-        generator=val_datagen.flow_from_directory(
-            file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
-            label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
-            target_size=target_size, color_mode='rgb',
-            batch_size=batch_size, shuffle=False
-        ),
-        val_samples = val_samples
-    )
+    inference(model_name, weight_file, image_size, image_list, data_dir, label_dir, return_results=False, save_dir=save_dir)
     duration = time.time() - start_time
-    print '{}s used.\n'.format(duration)
+    print '{}s used to make predictions.\n'.format(duration)
+
+    start_time = time.time()
+    conf_m, IOU, meanIOU = calculate_iou(model_name, nb_classes, save_dir, label_dir, image_list)
+    print 'IOU: '
+    print IOU
+    print 'meanIOU: %f'%meanIOU
+    print 'pixel acc: %f'%(np.sum(np.diag(conf_m))/np.sum(conf_m))
+    duration = time.time() - start_time
+    print '{}s used to calculate IOU.\n'.format(duration)
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Vgg16_16s'
-    target_size = (512, 512)
+    model_name = 'AtrousFCN_Resnet50_16s'
+    #weight_file = 'checkpoint_weights.hdf5'
+    weight_file = 'model.hdf5'
+    image_size = (512, 512)
     nb_classes = 21
     batch_size = 1
     val_file_path   = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/val.txt'
     data_dir        = '/home/aurora/Learning/Data/VOC2012/JPEGImages'
     label_dir       = '/home/aurora/Learning/Data/VOC2012/SegmentationClass'
-    evaluate(model_name, target_size, nb_classes, batch_size, val_file_path, data_dir, label_dir)
+    evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_file_path, data_dir, label_dir)
