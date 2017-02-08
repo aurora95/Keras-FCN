@@ -46,8 +46,8 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     ####################### make model ########################
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
 
-    model = globals()[model_name](weight_decay=weight_decay, batch_shape=batch_shape, batch_momentum=batchnorm_momentum)
-    sgd = SGD(lr=0.001, momentum=0.9)
+    model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
+    sgd = SGD(lr=lr_base, momentum=0.9)
     model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
     if resume_training:
         model.load_weights(checkpoint_path, by_name=True)
@@ -65,14 +65,11 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
 
     # set data generator and train
-    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=False,
+    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
                                     crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
-                                    rotation_range=0., shear_range=3.14/16, horizontal_flip=True,
+                                    rotation_range=0., shear_range=0, horizontal_flip=True,
+                                    channel_shift_range=20.,
                                     fill_mode='constant', label_cval=255)
-    #train_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
-    #train_datagen.set_ch_mean(np.array([103.939, 116.779, 123.68]))
-    #val_datagen = SegDataGenerator(channelwise_center=True, fill_mode='constant', label_cval=255, crop_mode='center', crop_size=target_size, pad_size=target_size,)
-    #val_datagen.set_ch_mean(np.array([104.00699, 116.66877, 122.67892]))
     def get_file_len(file_path):
         fp = open(file_path)
         lines = fp.readlines()
@@ -109,7 +106,7 @@ if __name__ == '__main__':
     lr_base = 0.01 * (float(batch_size) / 16)
     lr_power = 0.9
     resume_training=False
-    weight_decay = 0.0001
+    weight_decay = 0.0001/2
     nb_classes = 21
     target_size = (320, 320)
     train_file_path = '/home/aurora/Learning/Data/VOC2012/ImageSets/Segmentation/train.txt' #Data/VOClarge/VOC2012/ImageSets/Segmentation

@@ -16,7 +16,6 @@ from utils.get_weights_path import *
 from utils.basics import *
 from utils.resnet_helpers import *
 from utils.BilinearUpSampling import *
-from ContextLayers import *
 
 
 def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
