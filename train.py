@@ -112,7 +112,7 @@ if __name__ == '__main__':
     train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val64.txt')
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
-    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/VOC2012/SegmentationClass')
+    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)
