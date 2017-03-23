@@ -9,7 +9,7 @@ from keras.callbacks import *
 from keras.objectives import *
 from keras.models import load_model
 import keras.backend as K
-import keras.utils.visualize_util as vis_util
+#import keras.utils.visualize_util as vis_util
 
 from models import *
 from utils.loss_function import *
@@ -58,7 +58,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     f.write(model_json)
     f.close
     img_path = os.path.join(save_path, "model.png")
-    vis_util.plot(model, to_file=img_path, show_shapes=True)
+    #vis_util.plot(model, to_file=img_path, show_shapes=True)
     model.summary()
 
     #################### checkpoint saver#######################
