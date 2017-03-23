@@ -21,7 +21,7 @@ def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
     for img_num in image_list:
         img_num = img_num.strip('\n')
         total += 1
-        print '#%d: %s'%(total,img_num)
+        print( '#%d: %s'%(total,img_num))
         pred = img_to_array(Image.open('%s/%s.png'%(res_dir, img_num)), dim_ordering='tf').astype(int)
         label = img_to_array(Image.open('%s/%s.png'%(label_dir, img_num)), dim_ordering='tf').astype(int)
         flat_pred = np.ravel(pred)
@@ -55,16 +55,16 @@ def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_fi
     start_time = time.time()
     inference(model_name, weight_file, image_size, image_list, data_dir, label_dir, return_results=False, save_dir=save_dir)
     duration = time.time() - start_time
-    print '{}s used to make predictions.\n'.format(duration)
+    print('{}s used to make predictions.\n'.format(duration))
 
     start_time = time.time()
     conf_m, IOU, meanIOU = calculate_iou(model_name, nb_classes, save_dir, label_dir, image_list)
-    print 'IOU: '
-    print IOU
-    print 'meanIOU: %f'%meanIOU
-    print 'pixel acc: %f'%(np.sum(np.diag(conf_m))/np.sum(conf_m))
+    print( 'IOU: ')
+    print( IOU)
+    print( 'meanIOU: %f'%meanIOU)
+    print( 'pixel acc: %f'%(np.sum(np.diag(conf_m))/np.sum(conf_m)))
     duration = time.time() - start_time
-    print '{}s used to calculate IOU.\n'.format(duration)
+    print('{}s used to calculate IOU.\n'.format(duration))
 
 if __name__ == '__main__':
     model_name = 'AtrousFCN_Resnet50_16s'

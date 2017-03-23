@@ -11,4 +11,4 @@ def get_weights_path_resnet():
     return weights_path
 
 if __name__ == '__main__':
-    print get_weights_path_vgg16()
+    print( get_weights_path_vgg16())

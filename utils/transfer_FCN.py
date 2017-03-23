@@ -77,11 +77,11 @@ def transfer_FCN_Vgg16():
             if index.has_key(layer.name):
                 index[layer.name].set_weights(weights)
         model.save_weights(weights_path)
-        print 'Successfully transformed!'
+        print( 'Successfully transformed!')
     #else load weights
     else:
         model.load_weights(weights_path, by_name=True)
-        print 'Already transformed!'
+        print( 'Already transformed!')
 
 def transfer_FCN_ResNet50():
     input_shape = (224, 224, 3)
@@ -134,15 +134,15 @@ def transfer_FCN_ResNet50():
             if index.has_key(layer.name):
                 index[layer.name].set_weights(weights)
         model.save_weights(weights_path)
-        print 'Successfully transformed!'
+        print( 'Successfully transformed!')
     #else load weights
     else:
         model.load_weights(weights_path, by_name=True)
-        print 'Already transformed!'
+        print( 'Already transformed!')
 
 if __name__ == '__main__':
     if sys.argv[1] not in {'Vgg16', 'ResNet50'}:
-        print 'Wrong argument! Model name must be Vgg16 or ResNet50.'
+        print('Wrong argument! Model name must be Vgg16 or ResNet50.')
         exit()
     func = globals()['transfer_FCN_%s'%sys.argv[1]]
     func()
