@@ -109,10 +109,10 @@ if __name__ == '__main__':
     weight_decay = 0.0001/2
     nb_classes = 21
     target_size = (320, 320)
-    train_file_path = '~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt' #Data/VOClarge/VOC2012/ImageSets/Segmentation
-    val_file_path   = '~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val64.txt'
-    data_dir        = '~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages'
-    label_dir       = '~/datasets/VOC2012/VOCdevkit/VOC2012/VOC2012/SegmentationClass'
+    train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val64.txt')
+    data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/VOC2012/SegmentationClass')
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)

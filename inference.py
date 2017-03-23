@@ -76,8 +76,8 @@ if __name__ == '__main__':
     model_name = 'AtrousFCN_Resnet50_16s'
     weight_file = 'checkpoint_weights.hdf5'
     image_size = (512, 512)
-    data_dir        = '~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages'
-    label_dir       = '~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass'
+    data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
 
     image_list = sys.argv[1:]#'2007_000491'
     results = inference(model_name, weight_file, image_size, image_list, data_dir, label_dir)
