@@ -67,7 +67,8 @@ def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_fi
     print('{}s used to calculate IOU.\n'.format(duration))
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Resnet50_16s'
+    model_name = 'Atrous_DenseNet'
+    #model_name = 'AtrousFCN_Resnet50_16s'
     #weight_file = 'checkpoint_weights.hdf5'
     weight_file = 'model.hdf5'
     image_size = (512, 512)

@@ -11,6 +11,8 @@ from keras.applications.vgg16 import *
 from keras.models import *
 import keras.backend as K
 import tensorflow as tf
+from keras_contrib.applications.densenet import DenseNet
+from keras_contrib.applications.densenet import DenseNetFCN
 
 from utils.get_weights_path import *
 from utils.basics import *
@@ -18,7 +20,7 @@ from utils.resnet_helpers import *
 from utils.BilinearUpSampling import *
 
 
-def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
+def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
         image_size = batch_shape[1:3]
@@ -59,7 +61,7 @@ def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_s
     x = Convolution2D(4096, 1, 1, activation='relu', border_mode='same', name='fc2', W_regularizer=l2(weight_decay))(x)
     x = Dropout(0.5)(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(classes, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(size=(32, 32))(x)
 
@@ -69,7 +71,7 @@ def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_s
     model.load_weights(weights_path, by_name=True)
     return model
 
-def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
+def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
         image_size = batch_shape[1:3]
@@ -110,7 +112,7 @@ def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, b
     x = Convolution2D(4096, 1, 1, activation='relu', border_mode='same', name='fc2', W_regularizer=l2(weight_decay))(x)
     x = Dropout(0.5)(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(classes, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(target_size=tuple(image_size))(x)
 
@@ -121,7 +123,7 @@ def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, b
     return model
 
 
-def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
+def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
         image_size = batch_shape[1:3]
@@ -156,7 +158,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, ba
     x = identity_block(3, [512, 512, 2048], stage=5, block='b')(x)
     x = identity_block(3, [512, 512, 2048], stage=5, block='c')(x)
     #classifying layer
-    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(classes, 1, 1, init='he_normal', activation='linear', border_mode='valid', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
 
     x = BilinearUpSampling2D(size=(32, 32))(x)
 
@@ -165,7 +167,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, ba
     model.load_weights(weights_path, by_name=True)
     return model
 
-def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None):
+def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
         image_size = batch_shape[1:3]
@@ -200,8 +202,8 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
     x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='b', weight_decay=weight_decay, atrous_rate=(2, 2), batch_momentum=batch_momentum)(x)
     x = atrous_identity_block(3, [512, 512, 2048], stage=5, block='c', weight_decay=weight_decay, atrous_rate=(2, 2), batch_momentum=batch_momentum)(x)
     #classifying layer
-    #x = AtrousConvolution2D(21, 3, 3, atrous_rate=(2, 2), init='normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
-    x = Convolution2D(21, 1, 1, init='he_normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    #x = AtrousConvolution2D(classes, 3, 3, atrous_rate=(2, 2), init='normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
+    x = Convolution2D(classes, 1, 1, init='he_normal', activation='linear', border_mode='same', subsample=(1, 1), W_regularizer=l2(weight_decay))(x)
     x = BilinearUpSampling2D(target_size=tuple(image_size))(x)
 
     model = Model(img_input, x)
@@ -209,3 +211,14 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
     model.load_weights(weights_path, by_name=True)
     return model
 
+
+def Atrous_DenseNet(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
+    # TODO(ahundt) pass the parameters but for now start with the well known defaults
+    return DenseNet(depth=201, nb_dense_block=4, growth_rate=12, nb_filter=16, nb_layers_per_block=-1,
+             bottleneck=True, reduction=0.5, dropout_rate=0.2, weight_decay=1E-4,
+             include_top=True, weights='cifar10', input_tensor=None, input_shape=input_shape,
+             classes=classes, dilation_rate=2, pooling=None)
+
+
+def DenseNet_FCN(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
+    return DenseNetFCN(input_shape=input_shape, weights=None, classes=classes)

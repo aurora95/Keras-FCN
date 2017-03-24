@@ -99,7 +99,8 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Resnet50_16s'
+    #model_name = 'AtrousFCN_Resnet50_16s'
+    model_name = 'Atrous_DenseNet'
     batch_size = 8
     batchnorm_momentum = 0.95
     nb_epoch = 250
