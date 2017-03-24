@@ -11,7 +11,7 @@ from keras.models import load_model
 import keras.backend as K
 #import keras.utils.visualize_util as vis_util
 
-from models import *
+from models import Atrous_DenseNet
 from utils.loss_function import *
 from utils.metrics import *
 from utils.SegDataGenerator import *
