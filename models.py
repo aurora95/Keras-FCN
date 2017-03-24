@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from pylab import *
 import os
 import sys
+from keras_contrib.applications import densenet
 from keras.models import Model
 from keras.regularizers import l2
 from keras.layers import *
@@ -11,8 +12,6 @@ from keras.applications.vgg16 import *
 from keras.models import *
 import keras.backend as K
 import tensorflow as tf
-from keras_contrib.applications.densenet import DenseNet
-from keras_contrib.applications.densenet import DenseNetFCN
 
 from utils.get_weights_path import *
 from utils.basics import *
@@ -214,11 +213,11 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
 
 def Atrous_DenseNet(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     # TODO(ahundt) pass the parameters but for now start with the well known defaults
-    return DenseNet(depth=201, nb_dense_block=4, growth_rate=12, nb_filter=16, nb_layers_per_block=-1,
+    return densenet.DenseNet(depth=201, nb_dense_block=4, growth_rate=12, nb_filter=16, nb_layers_per_block=-1,
              bottleneck=True, reduction=0.5, dropout_rate=0.2, weight_decay=1E-4,
              include_top=True, weights='cifar10', input_tensor=None, input_shape=input_shape,
              classes=classes, dilation_rate=2, pooling=None)
 
 
 def DenseNet_FCN(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
-    return DenseNetFCN(input_shape=input_shape, weights=None, classes=classes)
+    return densenet.DenseNetFCN(input_shape=input_shape, weights=None, classes=classes)
