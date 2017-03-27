@@ -11,7 +11,7 @@ from keras.models import load_model
 import keras.backend as K
 #import keras.utils.visualize_util as vis_util
 
-from models import Atrous_DenseNet
+from models import *
 from utils.loss_function import *
 from utils.metrics import *
 from utils.SegDataGenerator import *
@@ -99,9 +99,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    model_name = 'AtrousFCN_Resnet50_16s'
+    # model_name = 'AtrousFCN_Resnet50_16s'
     # model_name = 'Atrous_DenseNet'
-    # model_name = 'DenseNet_FCN'
+    model_name = 'DenseNet_FCN'
     batch_size = 8
     batchnorm_momentum = 0.95
     nb_epoch = 250
