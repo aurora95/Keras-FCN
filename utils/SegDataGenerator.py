@@ -243,8 +243,8 @@ class SegDataGenerator(object):
         self.rescale = rescale
 
         if data_format not in {'channels_last', 'channels_first'}:
-            raise Exception('data_format should be 'channels_last' (channel after row and '
-                            'column) or 'channels_first' (channel before row and column). '
+            raise Exception('data_format should be channels_last (channel after row and '
+                            'column) or channels_first (channel before row and column). '
                             'Received arg: ', data_format)
         if crop_mode not in {'none', 'random', 'center'}:
             raise Exception('crop_mode should be "none" or "random" or "center" '
