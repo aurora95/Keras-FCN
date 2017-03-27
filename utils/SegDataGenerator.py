@@ -1,62 +1,63 @@
 from keras.preprocessing.image import *
 from keras.applications.imagenet_utils import preprocess_input
+from keras import backend as K
 from PIL import Image
 import numpy as np
 import os
 import cv2
 
-def center_crop(x, center_crop_size, dim_ordering, **kwargs):
-    if dim_ordering=='th':
+def center_crop(x, center_crop_size, data_format, **kwargs):
+    if data_format=='channels_first':
         centerw, centerh = x.shape[1]//2, x.shape[2]//2
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         centerw, centerh = x.shape[0]//2, x.shape[1]//2
     lw, lh = center_crop_size[0]//2, center_crop_size[1]//2
     rw, rh = center_crop_size[0]-lw, center_crop_size[1]-lh
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         return x[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         return x[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :]
 
-def pair_center_crop(x, y, center_crop_size, dim_ordering, **kwargs):
-    if dim_ordering=='th':
+def pair_center_crop(x, y, center_crop_size, data_format, **kwargs):
+    if data_format=='channels_first':
         centerw, centerh = x.shape[1]//2, x.shape[2]//2
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         centerw, centerh = x.shape[0]//2, x.shape[1]//2
     lw, lh = center_crop_size[0]//2, center_crop_size[1]//2
     rw, rh = center_crop_size[0]-lw, center_crop_size[1]-lh
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         return x[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh], y[:, centerw-lw:centerw+rw, centerh-lh:centerh+rh]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         return x[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :], y[centerw-lw:centerw+rw, centerh-lh:centerh+rh, :]
 
-def random_crop(x, random_crop_size, dim_ordering, sync_seed=None, **kwargs):
+def random_crop(x, random_crop_size, data_format, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         w, h = x.shape[1], x.shape[2]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         w, h = x.shape[0], x.shape[1]
     rangew = (w - random_crop_size[0]) // 2
     rangeh = (h - random_crop_size[1]) // 2
     offsetw = 0 if rangew == 0 else np.random.randint(rangew)
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         return x[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :]
 
-def pair_random_crop(x, y, random_crop_size, dim_ordering, sync_seed=None, **kwargs):
+def pair_random_crop(x, y, random_crop_size, data_format, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         w, h = x.shape[1], x.shape[2]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         w, h = x.shape[0], x.shape[1]
     rangew = (w - random_crop_size[0]) // 2
     rangeh = (h - random_crop_size[1]) // 2
     offsetw = 0 if rangew == 0 else np.random.randint(rangew)
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
-    if dim_ordering=='th':
+    if data_format=='channels_first':
         return x[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]], y[:, offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1]]
-    elif dim_ordering=='tf':
+    elif data_format=='channels_last':
         return x[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :], y[offsetw:offsetw+random_crop_size[0], offseth:offseth+random_crop_size[1], :]
 
 class SegDirectoryIterator(Iterator):
@@ -69,11 +70,11 @@ class SegDirectoryIterator(Iterator):
                  label_dir, label_suffix, nb_classes, ignore_label=255,
                  crop_mode='none', label_cval=255, pad_size=None,
                  target_size=None, color_mode='rgb',
-                 dim_ordering='default', class_mode='sparse',
+                 data_format='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
                  save_to_dir=None, save_prefix='', save_format='jpeg'):
-        if dim_ordering == 'default':
-            dim_ordering = K.image_dim_ordering()
+        if data_format == 'default':
+            data_format = K.image_data_format()
         self.file_path = file_path
         self.data_dir = data_dir
         self.label_dir = label_dir
@@ -88,20 +89,20 @@ class SegDirectoryIterator(Iterator):
             raise ValueError('Invalid color mode:', color_mode,
                              '; expected "rgb" or "grayscale".')
         self.color_mode = color_mode
-        self.dim_ordering = dim_ordering
+        self.data_format = data_format
         self.nb_label_ch = 1
         if target_size:
             if self.color_mode == 'rgb':
-                if self.dim_ordering == 'tf':
+                if self.data_format == 'channels_last':
                     self.image_shape = self.target_size + (3,)
                 else:
                     self.image_shape = (3,) + self.target_size
             else:
-                if self.dim_ordering == 'tf':
+                if self.data_format == 'channels_last':
                     self.image_shape = self.target_size + (1,)
                 else:
                     self.image_shape = (1,) + self.target_size
-            if self.dim_ordering == 'tf':
+            if self.data_format == 'channels_last':
                 self.label_shape = self.target_size + (self.nb_label_ch,)
             else:
                 self.label_shape = (self.nb_label_ch,) + self.target_size
@@ -156,8 +157,8 @@ class SegDirectoryIterator(Iterator):
             # do padding
             if self.target_size:
                 if self.crop_mode != 'none':
-                    x = img_to_array(img, dim_ordering=self.dim_ordering)
-                    y = img_to_array(label, dim_ordering=self.dim_ordering).astype(int)
+                    x = img_to_array(img, data_format=self.data_format)
+                    y = img_to_array(label, data_format=self.data_format).astype(int)
                     img_w, img_h = img.size
                     if self.pad_size:
                         pad_w = max(self.pad_size[1] - img_w, 0)
@@ -165,15 +166,15 @@ class SegDirectoryIterator(Iterator):
                     else:
                         pad_w = max(self.target_size[1] - img_w, 0)
                         pad_h = max(self.target_size[0] - img_h, 0)
-                    if self.dim_ordering == 'th':
+                    if self.data_format == 'channels_first':
                         x = np.lib.pad(x, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=0.)
                         y = np.lib.pad(y, ((0, 0), (pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2)), 'constant', constant_values=self.label_cval)
-                    elif self.dim_ordering == 'tf':
+                    elif self.data_format == 'channels_last':
                         x = np.lib.pad(x, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=0.)
                         y = np.lib.pad(y, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=self.label_cval)
                 else:
-                    x = img_to_array(img.resize((self.target_size[1], self.target_size[0]), Image.BILINEAR), dim_ordering=self.dim_ordering)
-                    y = img_to_array(label.resize((self.target_size[1], self.target_size[0]), Image.NEAREST), dim_ordering=self.dim_ordering).astype(int)
+                    x = img_to_array(img.resize((self.target_size[1], self.target_size[0]), Image.BILINEAR), data_format=self.data_format)
+                    y = img_to_array(label.resize((self.target_size[1], self.target_size[0]), Image.NEAREST), data_format=self.data_format).astype(int)
 
             if self.target_size == None:
                 batch_x = np.zeros((current_batch_size,) + x.shape)
@@ -190,7 +191,7 @@ class SegDirectoryIterator(Iterator):
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
             for i in range(current_batch_size):
-                img = array_to_img(batch_x[i], self.dim_ordering, scale=True)
+                img = array_to_img(batch_x[i], self.data_format, scale=True)
                 label = batch_y[i][:, :, 0].astype('uint8')
                 label[np.where(label==self.nb_classes)] = self.ignore_label
                 label = Image.fromarray(label, mode='P')
@@ -231,9 +232,9 @@ class SegDataGenerator(object):
                  horizontal_flip=False,
                  vertical_flip=False,
                  rescale=None,
-                 dim_ordering='default'):
-        if dim_ordering == 'default':
-            dim_ordering = K.image_dim_ordering()
+                 data_format='default'):
+        if data_format == 'default':
+            data_format = K.image_data_format()
         self.__dict__.update(locals())
         self.mean = None
         self.ch_mean = None
@@ -241,19 +242,19 @@ class SegDataGenerator(object):
         self.principal_components = None
         self.rescale = rescale
 
-        if dim_ordering not in {'tf', 'th'}:
-            raise Exception('dim_ordering should be "tf" (channel after row and '
-                            'column) or "th" (channel before row and column). '
-                            'Received arg: ', dim_ordering)
+        if data_format not in {'channels_last', 'channels_first'}:
+            raise Exception('data_format should be 'channels_last' (channel after row and '
+                            'column) or 'channels_first' (channel before row and column). '
+                            'Received arg: ', data_format)
         if crop_mode not in {'none', 'random', 'center'}:
             raise Exception('crop_mode should be "none" or "random" or "center" '
                             'Received arg: ', crop_mode)
-        self.dim_ordering = dim_ordering
-        if dim_ordering == 'th':
+        self.data_format = data_format
+        if data_format == 'channels_first':
             self.channel_index = 1
             self.row_index = 2
             self.col_index = 3
-        if dim_ordering == 'tf':
+        if data_format == 'channels_last':
             self.channel_index = 3
             self.row_index = 1
             self.col_index = 2
@@ -281,7 +282,7 @@ class SegDataGenerator(object):
             label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes, ignore_label=ignore_label,
             crop_mode=self.crop_mode, label_cval=self.label_cval, pad_size=self.pad_size,
             target_size=target_size, color_mode=color_mode,
-            dim_ordering=self.dim_ordering, class_mode=class_mode,
+            data_format=self.data_format, class_mode=class_mode,
             batch_size=batch_size, shuffle=shuffle, seed=seed,
             save_to_dir=save_to_dir, save_prefix=save_prefix, save_format=save_format)
 
@@ -380,9 +381,9 @@ class SegDataGenerator(object):
                 y = flip_axis(y, img_row_index)
 
         if self.crop_mode == 'center':
-            x, y = pair_center_crop(x, y, self.crop_size, self.dim_ordering)
+            x, y = pair_center_crop(x, y, self.crop_size, self.data_format)
         elif self.crop_mode == 'random':
-            x, y = pair_random_crop(x, y, self.crop_size, self.dim_ordering)
+            x, y = pair_random_crop(x, y, self.crop_size, self.data_format)
 
         # TODO:
         # channel-wise normalization

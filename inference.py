@@ -38,7 +38,7 @@ def inference(model_name, weight_file, image_size, image_list, data_dir, label_d
         total+=1
         print( '#%d: %s'%(total,img_num))
         image = Image.open('%s/%s.jpg'%(data_dir, img_num))
-        image = img_to_array(image, dim_ordering='default')
+        image = img_to_array(image, data_format='default')
 
         label = Image.open('%s/%s.png'%(label_dir, img_num))
         label_size = label.size
@@ -50,7 +50,7 @@ def inference(model_name, weight_file, image_size, image_list, data_dir, label_d
         pad_h = max(image_size[0] - img_h, 0)
         image = np.lib.pad(image, ((pad_h/2, pad_h - pad_h/2), (pad_w/2, pad_w - pad_w/2), (0, 0)), 'constant', constant_values=0.)
         #image -= mean_value
-        '''img = array_to_img(image, 'tf', scale=False)
+        '''img = array_to_img(image, 'channels_last', scale=False)
         img.show()
         exit()'''
         #image = cv2.resize(image, image_size)

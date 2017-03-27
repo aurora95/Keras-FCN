@@ -22,8 +22,8 @@ def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
         img_num = img_num.strip('\n')
         total += 1
         print( '#%d: %s'%(total,img_num))
-        pred = img_to_array(Image.open('%s/%s.png'%(res_dir, img_num)), dim_ordering='tf').astype(int)
-        label = img_to_array(Image.open('%s/%s.png'%(label_dir, img_num)), dim_ordering='tf').astype(int)
+        pred = img_to_array(Image.open('%s/%s.png'%(res_dir, img_num)), data_format='channels_last').astype(int)
+        label = img_to_array(Image.open('%s/%s.png'%(label_dir, img_num)), data_format='channels_last').astype(int)
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
         #acc = 0.

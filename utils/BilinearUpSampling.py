@@ -2,16 +2,16 @@ import keras.backend as K
 import tensorflow as tf
 from keras.layers import *
 
-def resize_images_bilinear(X, height_factor=1, width_factor=1, target_height=None, target_width=None, dim_ordering='default'):
+def resize_images_bilinear(X, height_factor=1, width_factor=1, target_height=None, target_width=None, data_format='default'):
     '''Resizes the images contained in a 4D tensor of shape
-    - [batch, channels, height, width] (for 'th' dim_ordering)
-    - [batch, height, width, channels] (for 'tf' dim_ordering)
+    - [batch, channels, height, width] (for 'channels_first' data_format)
+    - [batch, height, width, channels] (for 'channels_last' data_format)
     by a factor of (height_factor, width_factor). Both factors should be
     positive integers.
     '''
-    if dim_ordering == 'default':
-        dim_ordering = K.image_dim_ordering()
-    if dim_ordering == 'th':
+    if data_format == 'default':
+        data_format = K.image_data_format()
+    if data_format == 'channels_first':
         original_shape = K.int_shape(X)
         if target_height and target_width:
             new_shape = tf.constant(np.array((target_height, target_width)).astype('int32'))
@@ -26,7 +26,7 @@ def resize_images_bilinear(X, height_factor=1, width_factor=1, target_height=Non
         else:
             X.set_shape((None, None, original_shape[2] * height_factor, original_shape[3] * width_factor))
         return X
-    elif dim_ordering == 'tf':
+    elif data_format == 'channels_last':
         original_shape = K.int_shape(X)
         if target_height and target_width:
             new_shape = tf.constant(np.array((target_height, target_width)).astype('int32'))
@@ -40,24 +40,24 @@ def resize_images_bilinear(X, height_factor=1, width_factor=1, target_height=Non
             X.set_shape((None, original_shape[1] * height_factor, original_shape[2] * width_factor, None))
         return X
     else:
-        raise Exception('Invalid dim_ordering: ' + dim_ordering)
+        raise Exception('Invalid data_format: ' + data_format)
 
 class BilinearUpSampling2D(Layer):
-    def __init__(self, size=(1, 1), target_size=None, dim_ordering='default', **kwargs):
-        if dim_ordering == 'default':
-            dim_ordering = K.image_dim_ordering()
+    def __init__(self, size=(1, 1), target_size=None, data_format='default', **kwargs):
+        if data_format == 'default':
+            data_format = K.image_data_format()
         self.size = tuple(size)
         if target_size is not None:
             self.target_size = tuple(target_size)
         else:
             self.target_size = None
-        assert dim_ordering in {'tf', 'th'}, 'dim_ordering must be in {tf, th}'
-        self.dim_ordering = dim_ordering
+        assert data_format in {'channels_last', 'channels_first'}, 'data_format must be in {tf, th}'
+        self.data_format = data_format
         self.input_spec = [InputSpec(ndim=4)]
         super(BilinearUpSampling2D, self).__init__(**kwargs)
 
     def get_output_shape_for(self, input_shape):
-        if self.dim_ordering == 'th':
+        if self.data_format == 'channels_first':
             width = int(self.size[0] * input_shape[2] if input_shape[2] is not None else None)
             height = int(self.size[1] * input_shape[3] if input_shape[3] is not None else None)
             if self.target_size is not None:
@@ -67,7 +67,7 @@ class BilinearUpSampling2D(Layer):
                     input_shape[1],
                     width,
                     height)
-        elif self.dim_ordering == 'tf':
+        elif self.data_format == 'channels_last':
             width = int(self.size[0] * input_shape[1] if input_shape[1] is not None else None)
             height = int(self.size[1] * input_shape[2] if input_shape[2] is not None else None)
             if self.target_size is not None:
@@ -78,13 +78,13 @@ class BilinearUpSampling2D(Layer):
                     height,
                     input_shape[3])
         else:
-            raise Exception('Invalid dim_ordering: ' + self.dim_ordering)
+            raise Exception('Invalid data_format: ' + self.data_format)
 
     def call(self, x, mask=None):
         if self.target_size is not None:
-            return resize_images_bilinear(x, target_height=self.target_size[0], target_width=self.target_size[1], dim_ordering=self.dim_ordering)
+            return resize_images_bilinear(x, target_height=self.target_size[0], target_width=self.target_size[1], data_format=self.data_format)
         else:
-            return resize_images_bilinear(x, height_factor=self.size[0], width_factor=self.size[1], dim_ordering=self.dim_ordering)
+            return resize_images_bilinear(x, height_factor=self.size[0], width_factor=self.size[1], data_format=self.data_format)
 
     def get_config(self):
         config = {'size': self.size, 'target_size': self.target_size}
