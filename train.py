@@ -78,6 +78,8 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                     rotation_range=0., shear_range=0, horizontal_flip=True,
                                     channel_shift_range=20.,
                                     fill_mode='constant', label_cval=255)
+    val_datagen = SegDataGenerator()
+
     def get_file_len(file_path):
         fp = open(file_path)
         lines = fp.readlines()
