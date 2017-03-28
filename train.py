@@ -37,7 +37,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
         #lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
-        lr = (lr_base ** lr_power) ** float(epoch)
+        lr = (float(lr_base) ** float(lr_power)) ** float(epoch)
         print('lr: %f' % lr)
         return lr
     scheduler = LearningRateScheduler(lr_scheduler)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     batchnorm_momentum = 0.95
     nb_epoch = 350
     lr_base = 0.2 * (float(batch_size) / 4)
-    lr_power = float(1/30)
+    lr_power = float(1)/float(30)
     resume_training=False
     weight_decay = 0.0001/2
     nb_classes = 21
