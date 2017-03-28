@@ -213,7 +213,7 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
 
 def Atrous_DenseNet(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     # TODO(ahundt) pass the parameters but for now start with the well known defaults
-    return densenet.DenseNet(depth=202, nb_dense_block=4, growth_rate=32, nb_filter=16, nb_layers_per_block=-1,
+    return densenet.DenseNet(depth=None, nb_dense_block=4, growth_rate=12, nb_filter=16, nb_layers_per_block=4,
              bottleneck=True, reduction=0.5, dropout_rate=0.2, weight_decay=1E-4,
              include_top=True, weights=None, input_tensor=None, input_shape=input_shape,
              classes=classes, dilation_rate=2, pooling=None)

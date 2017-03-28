@@ -68,9 +68,9 @@ def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_fi
 
 if __name__ == '__main__':
     model_name = 'Atrous_DenseNet'
-    #model_name = 'AtrousFCN_Resnet50_16s'
-    #weight_file = 'checkpoint_weights.hdf5'
-    weight_file = 'model.hdf5'
+    # model_name = 'AtrousFCN_Resnet50_16s'
+    weight_file = 'checkpoint_weights.hdf5'
+    # weight_file = 'model.hdf5'
     image_size = (512, 512)
     nb_classes = 21
     batch_size = 1
