@@ -47,7 +47,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
     # optimizer = SGD(lr=lr_base, momentum=0.9)
     optimizer = Adam(lr_base)
-    model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=optimizer, metrics=[sparse_accuracy_ignoring_last_label])
+    model.compile(loss=softmax_sparse_crossentropy_ignoring_last_label,
+                  optimizer=optimizer,
+                  metrics=[sparse_accuracy_ignoring_last_label])
     if resume_training:
         model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
@@ -60,9 +62,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     # #vis_util.plot(model, to_file=img_path, show_shapes=True)
     # model.summary()
 
-    lr_reducer      = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
+    lr_reducer      = ReduceLROnPlateau(monitor=softmax_sparse_crossentropy_ignoring_last_label, factor=np.sqrt(0.1),
                                         cooldown=0, patience=15, min_lr=0.5e-6)
-    early_stopper   = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=70)
+    early_stopper   = EarlyStopping(monitor=sparse_accuracy_ignoring_last_label, min_delta=0.0001, patience=70)
     callbacks = [early_stopper, lr_reducer]
 
     ######################## tfboard ###########################
