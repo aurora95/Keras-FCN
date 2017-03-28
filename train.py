@@ -37,7 +37,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
         #lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
-        lr = (float(lr_base) ** float(lr_power)) ** float(epoch)
+        lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
         print('lr: %f' % lr)
         return lr
     scheduler = LearningRateScheduler(lr_scheduler)
