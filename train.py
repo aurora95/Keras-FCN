@@ -120,7 +120,7 @@ if __name__ == '__main__':
     batchnorm_momentum = 0.95
     nb_epoch = 350
     lr_base = 0.2 * (float(batch_size) / 4)
-    lr_power = 0.1 ** (float(1/30))
+    lr_power = float(1/30)
     resume_training=False
     weight_decay = 0.0001/2
     nb_classes = 21
