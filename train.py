@@ -62,10 +62,11 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     # #vis_util.plot(model, to_file=img_path, show_shapes=True)
     # model.summary()
 
-    lr_reducer      = ReduceLROnPlateau(monitor=softmax_sparse_crossentropy_ignoring_last_label, factor=np.sqrt(0.1),
-                                        cooldown=0, patience=15, min_lr=0.5e-6)
-    early_stopper   = EarlyStopping(monitor=sparse_accuracy_ignoring_last_label, min_delta=0.0001, patience=70)
-    callbacks = [early_stopper, lr_reducer]
+    # lr_reducer      = ReduceLROnPlateau(monitor=softmax_sparse_crossentropy_ignoring_last_label, factor=np.sqrt(0.1),
+    #                                     cooldown=0, patience=15, min_lr=0.5e-6)
+    # early_stopper   = EarlyStopping(monitor=sparse_accuracy_ignoring_last_label, min_delta=0.0001, patience=70)
+    # callbacks = [early_stopper, lr_reducer]
+    callbacks = [scheduler]
 
     ######################## tfboard ###########################
     if K.backend() == 'tensorflow':
@@ -98,14 +99,14 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                 samples_per_epoch=get_file_len(train_file_path),
                                 nb_epoch=nb_epoch,
                                 callbacks=callbacks,
-				                nb_worker=4,
-                                validation_data=val_datagen.flow_from_directory(
-                                    file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
-                                    label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
-                                    target_size=target_size, color_mode='rgb',
-                                    batch_size=batch_size, shuffle=False
-                                ),
-                                nb_val_samples = 64
+				                # nb_worker=4,
+                                # validation_data=val_datagen.flow_from_directory(
+                                #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
+                                #     label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
+                                #     target_size=target_size, color_mode='rgb',
+                                #     batch_size=batch_size, shuffle=False
+                                # ),
+                                # nb_val_samples = 64
                             )
 
     model.save_weights(save_path+'/model.hdf5')
