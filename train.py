@@ -4,7 +4,7 @@ from pylab import *
 import os
 import sys
 import pickle
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras.callbacks import *
 from keras.objectives import *
 from keras.models import load_model
@@ -40,15 +40,14 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         print('lr: %f' % lr)
         return lr
     scheduler = LearningRateScheduler(lr_scheduler)
-    ######################## tfboard ###########################
-    tfboard = TensorBoard(log_dir=os.path.join(save_path, 'logs'))
 
     ####################### make model ########################
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
 
     model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
-    sgd = SGD(lr=lr_base, momentum=0.9)
-    model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=sgd, metrics=[sparse_accuracy_ignoring_last_label])
+    # optimizer = SGD(lr=lr_base, momentum=0.9)
+    optimizer = Adam(lr_base)
+    model.compile(loss = softmax_sparse_crossentropy_ignoring_last_label, optimizer=optimizer, metrics=[sparse_accuracy_ignoring_last_label])
     if resume_training:
         model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
@@ -61,9 +60,18 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     #vis_util.plot(model, to_file=img_path, show_shapes=True)
     model.summary()
 
+    lr_reducer      = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
+                                        cooldown=0, patience=15, min_lr=0.5e-6)
+    early_stopper   = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=70)
+    callbacks = [early_stopper, lr_reducer]
+
+    ######################## tfboard ###########################
+    if K.backend() == 'tensorflow':
+        tensorboard = TensorBoard(log_dir=os.path.join(save_path, 'logs'), histogram_freq=10, write_graph=True)
+        callbacks.append(tensorboard)
     #################### checkpoint saver#######################
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
-
+    callbacks.append(checkpoint)
     # set data generator and train
     train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
                                     crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
@@ -85,23 +93,23 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                 ),
                                 samples_per_epoch=get_file_len(train_file_path),
                                 nb_epoch=nb_epoch,
-                                callbacks=[scheduler, checkpoint],
+                                callbacks=callbacks,
 				                nb_worker=4,
-                                #validation_data=val_datagen.flow_from_directory(
-                                #    file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
-                                #    label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
-                                #    target_size=target_size, color_mode='rgb',
-                                #    batch_size=batch_size, shuffle=False
-                                #),
-                                #nb_val_samples = 64
+                                validation_data=val_datagen.flow_from_directory(
+                                    file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
+                                    label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
+                                    target_size=target_size, color_mode='rgb',
+                                    batch_size=batch_size, shuffle=False
+                                ),
+                                nb_val_samples = 64
                             )
 
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
     # model_name = 'AtrousFCN_Resnet50_16s'
-    # model_name = 'Atrous_DenseNet'
-    model_name = 'DenseNet_FCN'
+    model_name = 'Atrous_DenseNet'
+    # model_name = 'DenseNet_FCN'
     batch_size = 3
     batchnorm_momentum = 0.95
     nb_epoch = 350
