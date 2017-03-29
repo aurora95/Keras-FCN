@@ -211,12 +211,18 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
     return model
 
 
-def Atrous_DenseNet(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
-    # TODO(ahundt) pass the parameters but for now start with the well known defaults
-    return densenet.DenseNet(depth=None, nb_dense_block=4, growth_rate=12, nb_filter=16, nb_layers_per_block=4,
-             bottleneck=True, reduction=0.5, dropout_rate=0.2, weight_decay=1E-4,
-             include_top=True, weights=None, input_tensor=None, input_shape=input_shape,
-             classes=classes, dilation_rate=2, pooling=None)
+def Atrous_DenseNet(input_shape=None, weight_decay=0.,
+                    batch_momentum=0.9, batch_shape=None, classes=21):
+    # TODO(ahundt) pass the parameters but use defaults for now
+    return densenet.DenseNet(depth=None, nb_dense_block=4, growth_rate=12,
+                             nb_filter=16, nb_layers_per_block=4,
+                             bottleneck=True, reduction=0.5, dropout_rate=0.2,
+                             weight_decay=1E-4,
+                             include_top=True, top='segmentation',
+                             weights=None, input_tensor=None,
+                             input_shape=input_shape,
+                             classes=classes, transition_dilation_rate=2,
+                             transition_kernel_size=(2, 2), pooling=None)
 
 
 def DenseNet_FCN(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
