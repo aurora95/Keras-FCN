@@ -222,8 +222,11 @@ def Atrous_DenseNet(input_shape=None, weight_decay=0.,
                              weights=None, input_tensor=None,
                              input_shape=input_shape,
                              classes=classes, transition_dilation_rate=2,
-                             transition_kernel_size=(2, 2), pooling=None)
+                             transition_kernel_size=(2, 2),
+                             transition_pooling=None)
 
 
-def DenseNet_FCN(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
-    return densenet.DenseNetFCN(input_shape=input_shape, weights=None, classes=classes)
+def DenseNet_FCN(input_shape=None, weight_decay=0.,
+                 batch_momentum=0.9, batch_shape=None, classes=21):
+    return densenet.DenseNetFCN(input_shape=input_shape,
+                                weights=None, classes=classes)
