@@ -26,7 +26,7 @@ def inference(model_name, weight_file, image_size, image_list, data_dir, label_d
     session = tf.Session(config=config)
     K.set_session(session)
 
-    model = globals()[model_name](0.0, batch_shape=batch_shape)
+    model = globals()[model_name](batch_shape=batch_shape)
     model.load_weights(checkpoint_path, by_name=True)
 
     model.summary()
