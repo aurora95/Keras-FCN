@@ -86,10 +86,10 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
-    train_datagen = SegDataGenerator(#zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
+    train_datagen = SegDataGenerator(zoom_range=[0.0, 0.0], zoom_maintain_shape=True,
                                     crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
-                                    rotation_range=0., shear_range=0,# horizontal_flip=True,
-                                    #channel_shift_range=20.,
+                                    rotation_range=0., shear_range=0, horizontal_flip=False,
+                                    channel_shift_range=0,
                                     fill_mode='constant', label_cval=255)
     val_datagen = SegDataGenerator()
 
