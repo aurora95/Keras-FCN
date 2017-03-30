@@ -86,10 +86,10 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
-    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
+    train_datagen = SegDataGenerator(#zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
                                     crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
-                                    rotation_range=0., shear_range=0, horizontal_flip=True,
-                                    channel_shift_range=20.,
+                                    rotation_range=0., shear_range=0,# horizontal_flip=True,
+                                    #channel_shift_range=20.,
                                     fill_mode='constant', label_cval=255)
     val_datagen = SegDataGenerator()
 
@@ -134,7 +134,8 @@ if __name__ == '__main__':
     weight_decay = 0.0001/2
     nb_classes = 21
     target_size = (320, 320)
-    train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    # train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
     label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
