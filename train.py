@@ -40,7 +40,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         #lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
         if epoch > 0.9 * nb_epoch:
             lr = 0.0001
-        if epoch > 0.6 * nb_epoch:
+        elif epoch > 0.6 * nb_epoch:
             lr = 0.001
         elif epoch > 0.3 * nb_epoch:
             lr = 0.01
@@ -64,13 +64,13 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
     # save model structure
-    # f = open(model_path, 'w')
-    # model_json = model.to_json()
-    # f.write(model_json)
-    # f.close
-    # img_path = os.path.join(save_path, "model.png")
+    f = open(model_path, 'w')
+    model_json = model.to_json()
+    f.write(model_json)
+    f.close
+    img_path = os.path.join(save_path, "model.png")
     # #vis_util.plot(model, to_file=img_path, show_shapes=True)
-    # model.summary()
+    model.summary()
 
     # lr_reducer      = ReduceLROnPlateau(monitor=softmax_sparse_crossentropy_ignoring_last_label, factor=np.sqrt(0.1),
     #                                     cooldown=0, patience=15, min_lr=0.5e-6)
