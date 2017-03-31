@@ -40,9 +40,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         #lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
         if epoch > 0.9 * nb_epoch:
             lr = 0.0001
-        elif epoch > 0.6 * nb_epoch:
+        elif epoch > 0.75 * nb_epoch:
             lr = 0.001
-        elif epoch > 0.3 * nb_epoch:
+        elif epoch > 0.5 * nb_epoch:
             lr = 0.01
         else:
             lr = 0.1
@@ -86,10 +86,10 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
-    train_datagen = SegDataGenerator(#zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
+    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
                                     crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
                                     rotation_range=0., shear_range=0, horizontal_flip=True,
-                                    #channel_shift_range=20.,
+                                    channel_shift_range=20.,
                                     fill_mode='constant', label_cval=255)
     val_datagen = SegDataGenerator()
 
@@ -123,19 +123,19 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
 
 if __name__ == '__main__':
     # model_name = 'AtrousFCN_Resnet50_16s'
-    model_name = 'Atrous_DenseNet'
-    #model_name = 'DenseNet_FCN'
-    batch_size = 1
+    #model_name = 'Atrous_DenseNet'
+    model_name = 'DenseNet_FCN'
+    batch_size = 3
     batchnorm_momentum = 0.95
-    nb_epoch = 250
+    nb_epoch = 450
     lr_base = 0.2 * (float(batch_size) / 4)
     lr_power = float(1)/float(30)
     resume_training=False
     weight_decay = 0.0001/2
     nb_classes = 21
     target_size = (320, 320)
-    # train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-    train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
     label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')

@@ -228,5 +228,8 @@ def Atrous_DenseNet(input_shape=None, weight_decay=0.,
 
 def DenseNet_FCN(input_shape=None, weight_decay=0.,
                  batch_momentum=0.9, batch_shape=None, classes=21):
-    return densenet.DenseNetFCN(input_shape=input_shape,
-                                weights=None, classes=classes)
+    return densenet.DenseNetFCN(input_shape=(320, 320, 3),
+                                weights=None, classes=classes,
+                                nb_layers_per_block=6,
+                                growth_rate=16,
+                                dropout_rate=0.2)
