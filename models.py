@@ -216,7 +216,7 @@ def Atrous_DenseNet(input_shape=None, weight_decay=0.,
     # TODO(ahundt) pass the parameters but use defaults for now
     return densenet.DenseNet(depth=None, nb_dense_block=3, growth_rate=32,
                              nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
-                             bottleneck=True, reduction=0.5, dropout_rate=0.0,
+                             bottleneck=True, reduction=0.25, dropout_rate=0.0,
                              weight_decay=1E-4,
                              include_top=True, top='segmentation',
                              weights=None, input_tensor=None,
