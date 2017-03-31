@@ -32,20 +32,31 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     if os.path.exists(save_path) == False:
         os.mkdir(save_path)
     ################learning rate scheduler####################
-    def lr_scheduler(epoch):
+    def lr_scheduler(epoch, mode = 'adam'):
         '''if lr_dict.has_key(epoch):
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
-        #lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
-        #lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
-        if epoch > 0.9 * nb_epoch:
-            lr = 0.0001
-        elif epoch > 0.75 * nb_epoch:
+
+        if mode is 'power_decay':
+            # original lr scheduler
+            lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
+        if mode is 'exp_decay':
+            # exponential decay
+            lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
+        # adam default lr
+        if mode is 'adam':
             lr = 0.001
-        elif epoch > 0.5 * nb_epoch:
-            lr = 0.01
-        else:
-            lr = 0.1
+
+        if mode is 'progressive_drops':
+            # drops as progression proceeds
+            if epoch > 0.9 * nb_epoch:
+                lr = 0.0001
+            elif epoch > 0.75 * nb_epoch:
+                lr = 0.001
+            elif epoch > 0.5 * nb_epoch:
+                lr = 0.01
+            else:
+                lr = 0.1
 
         print('lr: %f' % lr)
         return lr
@@ -56,7 +67,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
 
     model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
     # optimizer = SGD(lr=lr_base, momentum=0.9)
-    optimizer = Adam(lr_base)
+    optimizer = Adam()
     model.compile(loss=softmax_sparse_crossentropy_ignoring_last_label,
                   optimizer=optimizer,
                   metrics=[sparse_accuracy_ignoring_last_label])
