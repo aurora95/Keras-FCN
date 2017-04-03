@@ -17,20 +17,27 @@ from inference import inference
 def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
     conf_m = zeros((nb_classes,nb_classes), dtype=float)
     total = 0
-    #mean_acc = 0.
+    # mean_acc = 0.
     for img_num in image_list:
         img_num = img_num.strip('\n')
         total += 1
-        print( '#%d: %s'%(total,img_num))
-        pred = img_to_array(Image.open('%s/%s.png'%(res_dir, img_num)), data_format='channels_last').astype(int)
-        label = img_to_array(Image.open('%s/%s.png'%(label_dir, img_num)), data_format='channels_last').astype(int)
+        print('#%d: %s' % (total,img_num))
+        pred = img_to_array(Image.open('%s/%s.png' % (res_dir, img_num)),
+                            data_format='channels_last').astype(int)
+        label = img_to_array(Image.open('%s/%s.png' % (label_dir, img_num)),
+                             data_format='channels_last').astype(int)
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
-        #acc = 0.
-        for p,l in zip(flat_pred,flat_label):
-            if l==255:
+        # acc = 0.
+        for p, l in zip(flat_pred, flat_label):
+            if l == 255:
                 continue
-            conf_m[l,p] += 1
+            if l <= nb_classes and p <= nb_classes:
+                conf_m[l, p] += 1
+            else:
+                print('Invalid entry encountered, skipping! Label: ', l,
+                      ' Prediction: ', p, ' Img_num: ', img_num)
+
         #    if l==p:
         #        acc+=1
         #acc /= flat_pred.shape[0]
