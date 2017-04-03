@@ -230,6 +230,6 @@ def DenseNet_FCN(input_shape=None, weight_decay=0.,
                  batch_momentum=0.9, batch_shape=None, classes=21):
     return densenet.DenseNetFCN(input_shape=input_shape,
                                 weights=None, classes=classes,
-                                nb_layers_per_block=4,
-                                growth_rate=12,
+                                nb_layers_per_block=[4, 5, 7, 10, 12, 15],
+                                growth_rate=16,
                                 dropout_rate=0.2)
