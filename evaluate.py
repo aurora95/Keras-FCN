@@ -23,10 +23,8 @@ def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
         img_num = img_num.strip('\n')
         total += 1
         print('#%d: %s' % (total, img_num))
-        pred = img_to_array(Image.open('%s/%s.png' % (res_dir, img_num)),
-                            data_format='channels_last').astype(int)
-        label = img_to_array(Image.open('%s/%s.png' % (label_dir, img_num)),
-                             data_format='channels_last').astype(int)
+        pred = img_to_array(Image.open('%s/%s.png' % (res_dir, img_num))).astype(int)
+        label = img_to_array(Image.open('%s/%s.png' % (label_dir, img_num))).astype(int)
         flat_pred = np.ravel(pred)
         flat_label = np.ravel(label)
         # acc = 0.
@@ -67,15 +65,15 @@ def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_fi
 
     start_time = time.time()
     conf_m, IOU, meanIOU = calculate_iou(model_name, nb_classes, save_dir, label_dir, image_list)
-    print( 'IOU: ')
-    print( IOU)
-    print( 'meanIOU: %f'%meanIOU)
-    print( 'pixel acc: %f'%(np.sum(np.diag(conf_m))/np.sum(conf_m)))
+    print('IOU: ')
+    print(IOU)
+    print('meanIOU: %f' % meanIOU)
+    print('pixel acc: %f' % (np.sum(np.diag(conf_m))/np.sum(conf_m)))
     duration = time.time() - start_time
     print('{}s used to calculate IOU.\n'.format(duration))
 
 if __name__ == '__main__':
-    #model_name = 'Atrous_DenseNet'
+    # model_name = 'Atrous_DenseNet'
     # model_name = 'AtrousFCN_Resnet50_16s'
     model_name = 'DenseNet_FCN'
     weight_file = 'checkpoint_weights.hdf5'
