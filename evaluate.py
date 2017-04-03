@@ -72,7 +72,7 @@ if __name__ == '__main__':
     model_name = 'DenseNet_FCN'
     weight_file = 'checkpoint_weights.hdf5'
     # weight_file = 'model.hdf5'
-    image_size = (320, 320)
+    image_size = (512, 512)
     nb_classes = 21
     batch_size = 1
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
