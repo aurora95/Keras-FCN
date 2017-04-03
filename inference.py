@@ -74,7 +74,8 @@ def inference(model_name, weight_file, image_size, image_list, data_dir, label_d
 
 if __name__ == '__main__':
     # model_name = 'AtrousFCN_Resnet50_16s'
-    model_name = 'Atrous_DenseNet'
+    # model_name = 'Atrous_DenseNet'
+    model_name = 'DenseNet_FCN'
     weight_file = 'checkpoint_weights.hdf5'
     image_size = (512, 512)
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
