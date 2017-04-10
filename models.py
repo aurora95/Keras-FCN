@@ -251,7 +251,7 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                           input_tensor=img_input,
                           include_top=include_top)
 
-    x = Conv2D(nb_classes, (1, 1), activation='linear',
+    x = Conv2D(classes, (1, 1), activation='linear',
                padding='same', kernel_regularizer=l2(weight_decay),
                use_bias=False)(x)
     model = Model(img_input, x)
@@ -287,7 +287,7 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                              input_tensor=img_input,
                              include_top=include_top)
 
-    x = Conv2D(nb_classes, (1, 1), activation='linear',
+    x = Conv2D(classes, (1, 1), activation='linear',
                padding='same', kernel_regularizer=l2(weight_decay),
                use_bias=False)(x)
     # TODO: add weight loading?
