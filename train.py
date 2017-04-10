@@ -19,7 +19,7 @@ import time
 
 
 def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
-            data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False):
+            data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False, class_weight=None):
     if target_size:
         input_shape = target_size + (3,)
     else:
@@ -31,8 +31,9 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     save_path = os.path.join(current_dir, 'Models/' + model_name)
     if os.path.exists(save_path) == False:
         os.mkdir(save_path)
+
     ################learning rate scheduler####################
-    def lr_scheduler(epoch, mode = 'adam'):
+    def lr_scheduler(epoch, mode='adam'):
         '''if lr_dict.has_key(epoch):
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
@@ -48,7 +49,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
             lr = 0.001
 
         if mode is 'progressive_drops':
-            # drops as progression proceeds
+            # drops as progression proceeds, good for sgd
             if epoch > 0.9 * nb_epoch:
                 lr = 0.0001
             elif epoch > 0.75 * nb_epoch:
@@ -128,6 +129,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                 #     batch_size=batch_size, shuffle=False
                                 # ),
                                 # nb_val_samples = 64
+                                class_weight=class_weight
                             )
 
     model.save_weights(save_path+'/model.hdf5')
@@ -141,8 +143,11 @@ if __name__ == '__main__':
     nb_epoch = 450
     lr_base = 0.2 * (float(batch_size) / 4)
     lr_power = float(1)/float(30)
-    resume_training=False
-    weight_decay = 0.0001/2
+    resume_training = False
+    if model_name is 'AtrousFCN_Resnet50_16s':
+        weight_decay = 0.0001/2
+    else:
+        weight_decay = 1e-4
     nb_classes = 21
     target_size = (320, 320)
     train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
@@ -150,8 +155,11 @@ if __name__ == '__main__':
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
     label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+    class_weight = None
+
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)
     train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
-            data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training)
+          data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training,
+          class_weight=class_weight)
