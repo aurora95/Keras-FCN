@@ -10,6 +10,7 @@ from keras.layers import *
 from keras.engine import Layer
 from keras.applications.vgg16 import *
 from keras.models import *
+from keras.applications.imagenet_utils import _obtain_input_shape
 import keras.backend as K
 import tensorflow as tf
 
