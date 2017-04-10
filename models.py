@@ -232,12 +232,19 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                                  transition_kernel_size=(1, 1),
                                  transition_pooling=None)
 
-    if batch_shape:
-        img_input = Input(batch_shape=batch_shape)
-        image_size = batch_shape[1:3]
-    else:
-        img_input = Input(shape=input_shape)
-        image_size = input_shape[0:2]
+    # if batch_shape:
+    #     img_input = Input(batch_shape=batch_shape)
+    #     image_size = batch_shape[1:3]
+    # else:
+    #     img_input = Input(shape=input_shape)
+    #     image_size = input_shape[0:2]
+
+    input_shape = _obtain_input_shape(input_shape,
+                                      default_size=32,
+                                      min_size=16,
+                                      data_format=K.image_data_format(),
+                                      include_top=False)
+    img_input = Input(shape=input_shape)
 
     x = densenet.DenseNet(depth=None, nb_dense_block=3, growth_rate=32,
                           nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
@@ -273,12 +280,20 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                                     growth_rate=16,
                                     dropout_rate=0.2)
 
-    if batch_shape:
-        img_input = Input(batch_shape=batch_shape)
-        image_size = batch_shape[1:3]
-    else:
-        img_input = Input(shape=input_shape)
-        image_size = input_shape[0:2]
+    # if batch_shape:
+    #     img_input = Input(batch_shape=batch_shape)
+    #     image_size = batch_shape[1:3]
+    # else:
+    #     img_input = Input(shape=input_shape)
+    #     image_size = input_shape[0:2]
+
+    input_shape = _obtain_input_shape(input_shape,
+                                      default_size=32,
+                                      min_size=16,
+                                      data_format=K.image_data_format(),
+                                      include_top=False)
+    img_input = Input(shape=input_shape)
+
     x = densenet.DenseNetFCN(input_shape=input_shape,
                              weights=None, classes=classes,
                              nb_layers_per_block=[4, 5, 7, 10, 12, 15],
