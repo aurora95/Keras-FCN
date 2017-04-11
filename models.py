@@ -247,13 +247,13 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                                       include_top=False)
     img_input = Input(shape=input_shape)
 
-    x = densenet.__create_dense_net(depth=None, nb_dense_block=3, growth_rate=32,
+    x = densenet.__create_dense_net(classes, img_input,
+                                    depth=None, nb_dense_block=3, growth_rate=32,
                                     nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
                                     bottleneck=True, reduction=0.5, dropout_rate=0.2,
                                     weight_decay=1E-4, top='segmentation',
-                                    weights=None,
                                     input_shape=input_shape,
-                                    classes=classes, transition_dilation_rate=2,
+                                    transition_dilation_rate=2,
                                     transition_kernel_size=(1, 1),
                                     transition_pooling=None,
                                     input_tensor=img_input,
@@ -296,8 +296,8 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                                       include_top=False)
     img_input = Input(shape=input_shape)
 
-    x = densenet.__create_fcn_dense_net(input_shape=input_shape,
-                                        weights=None, classes=classes,
+    x = densenet.__create_fcn_dense_net(classes, img_input,
+                                        input_shape=input_shape,
                                         nb_layers_per_block=[4, 5, 7, 10, 12, 15],
                                         growth_rate=16,
                                         dropout_rate=0.2,
