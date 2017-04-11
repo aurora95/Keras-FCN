@@ -155,7 +155,10 @@ if __name__ == '__main__':
     val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
     label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
-    class_weight = None
+    class_weight = {i: 1 for i in range(nb_classes)}
+    # The background class is much more common than all
+    # others, so give it less weight!
+    class_weight[0] = 0.1
 
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
