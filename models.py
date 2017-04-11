@@ -247,22 +247,23 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                                       include_top=False)
     img_input = Input(shape=input_shape)
 
-    x = densenet.DenseNet(depth=None, nb_dense_block=3, growth_rate=32,
-                          nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
-                          bottleneck=True, reduction=0.5, dropout_rate=0.2,
-                          weight_decay=1E-4, top='segmentation',
-                          weights=None,
-                          input_shape=input_shape,
-                          classes=classes, transition_dilation_rate=2,
-                          transition_kernel_size=(1, 1),
-                          transition_pooling=None,
-                          input_tensor=img_input,
-                          include_top=include_top)
+    x = densenet.__create_dense_net(depth=None, nb_dense_block=3, growth_rate=32,
+                                    nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
+                                    bottleneck=True, reduction=0.5, dropout_rate=0.2,
+                                    weight_decay=1E-4, top='segmentation',
+                                    weights=None,
+                                    input_shape=input_shape,
+                                    classes=classes, transition_dilation_rate=2,
+                                    transition_kernel_size=(1, 1),
+                                    transition_pooling=None,
+                                    input_tensor=img_input,
+                                    include_top=include_top)
 
     x = Conv2D(classes, (1, 1), activation='linear',
                padding='same', kernel_regularizer=l2(weight_decay),
                use_bias=False)(x)
-    model = Model(img_input, x)
+    model = Model(img_input, x, name='Atrous_DenseNet')
+    # TODO(ahundt) add weight loading
     return model
 
 
@@ -295,17 +296,17 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                                       include_top=False)
     img_input = Input(shape=input_shape)
 
-    x = densenet.DenseNetFCN(input_shape=input_shape,
-                             weights=None, classes=classes,
-                             nb_layers_per_block=[4, 5, 7, 10, 12, 15],
-                             growth_rate=16,
-                             dropout_rate=0.2,
-                             input_tensor=img_input,
-                             include_top=include_top)
+    x = densenet.__create_fcn_dense_net(input_shape=input_shape,
+                                        weights=None, classes=classes,
+                                        nb_layers_per_block=[4, 5, 7, 10, 12, 15],
+                                        growth_rate=16,
+                                        dropout_rate=0.2,
+                                        input_tensor=img_input,
+                                        include_top=include_top)
 
     x = Conv2D(classes, (1, 1), activation='linear',
                padding='same', kernel_regularizer=l2(weight_decay),
                use_bias=False)(x)
-    # TODO: add weight loading?
-    model = Model(img_input, x)
+    # TODO(ahundt) add weight loading
+    model = Model(img_input, x, name='DenseNet_FCN')
     return model
