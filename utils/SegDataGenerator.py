@@ -83,6 +83,7 @@ class SegDirectoryIterator(Iterator):
     label_dir: location of label files
     data_suffix: image file extension, such as `.jpg` or `.png`
     label_suffix: label file suffix, such as `.png`, or `.npy`
+    loss_shape: shape to use when applying loss function to the label data
     '''
 
     def __init__(self, file_path, seg_data_generator,
@@ -92,7 +93,8 @@ class SegDirectoryIterator(Iterator):
                  target_size=None, color_mode='rgb',
                  data_format='default', class_mode='sparse',
                  batch_size=1, shuffle=True, seed=None,
-                 save_to_dir=None, save_prefix='', save_format='jpeg'):
+                 save_to_dir=None, save_prefix='', save_format='jpeg',
+                 loss_shape=None):
         if data_format == 'default':
             data_format = K.image_data_format()
         self.file_path = file_path
@@ -113,6 +115,7 @@ class SegDirectoryIterator(Iterator):
         self.color_mode = color_mode
         self.data_format = data_format
         self.nb_label_ch = 1
+        self.loss_shape = loss_shape
         if target_size:
             if self.color_mode == 'rgb':
                 if self.data_format == 'channels_last':
@@ -231,6 +234,9 @@ class SegDirectoryIterator(Iterator):
             if self.ignore_label:
                 y[np.where(y == self.ignore_label)] = self.nb_classes
 
+            if self.loss_shape is not None:
+                y = np.reshape(y, self.loss_shape)
+
             batch_x[i] = x
             batch_y[i] = y
         # optionally save augmented images to disk for debugging purposes
@@ -317,22 +323,28 @@ class SegDataGenerator(object):
                             'Received arg: ', zoom_range)
 
     def flow_from_directory(self, file_path, data_dir, data_suffix,
-                            label_dir, label_suffix, nb_classes, ignore_label=255,
+                            label_dir, label_suffix, nb_classes,
+                            ignore_label=255,
                             target_size=None, color_mode='rgb',
                             class_mode='sparse',
                             batch_size=32, shuffle=True, seed=None,
-                            save_to_dir=None, save_prefix='', save_format='jpeg'):
+                            save_to_dir=None, save_prefix='', save_format='jpeg',
+                            loss_shape=None):
         if self.crop_mode == 'random' or self.crop_mode == 'center':
             target_size = self.crop_size
         return SegDirectoryIterator(
             file_path, self,
             data_dir=data_dir, data_suffix=data_suffix,
-            label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes, ignore_label=ignore_label,
-            crop_mode=self.crop_mode, label_cval=self.label_cval, pad_size=self.pad_size,
+            label_dir=label_dir, label_suffix=label_suffix,
+            nb_classes=nb_classes, ignore_label=ignore_label,
+            crop_mode=self.crop_mode, label_cval=self.label_cval,
+            pad_size=self.pad_size,
             target_size=target_size, color_mode=color_mode,
             data_format=self.data_format, class_mode=class_mode,
             batch_size=batch_size, shuffle=shuffle, seed=seed,
-            save_to_dir=save_to_dir, save_prefix=save_prefix, save_format=save_format)
+            save_to_dir=save_to_dir, save_prefix=save_prefix,
+            save_format=save_format,
+            loss_shape=loss_shape)
 
     def standardize(self, x):
         if self.rescale:

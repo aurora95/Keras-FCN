@@ -72,15 +72,20 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     # optimizer = SGD(lr=lr_base, momentum=0.9)
     optimizer = Adam()
 
-    ####################### loss function ########################
+    ####################### loss function & metric ########################
     if dataset is 'VOC2012':
         loss_fn = softmax_sparse_crossentropy_ignoring_last_label
+        metrics = [sparse_accuracy_ignoring_last_label]
+        loss_shape = None
     if dataset is 'COCO':
         def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
+        metrics = [binary_accuracy]
+        loss_shape = (target_size[0] * target_size[1] * nb_classes,)
+
 
     model.compile(loss=loss_fn,
                   optimizer=optimizer,
-                  metrics=[sparse_accuracy_ignoring_last_label])
+                  metrics=metrics)
     if resume_training:
         model.load_weights(checkpoint_path, by_name=True)
     model_path = os.path.join(save_path, "model.json")
@@ -125,6 +130,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
                                     label_dir=label_dir, label_suffix='.png', nb_classes=nb_classes,
                                     target_size=target_size, color_mode='rgb',
                                     batch_size=batch_size, shuffle=True,
+                                    loss_shape=loss_shape,
                                     #save_to_dir='Images/'
                                 ),
                                 samples_per_epoch=get_file_len(train_file_path),
