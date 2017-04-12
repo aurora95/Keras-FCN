@@ -2,7 +2,7 @@ from keras.objectives import *
 import keras.backend as K
 import tensorflow as tf
 
-# Softmax cross-entropy loss function for segmentation
+# Softmax cross-entropy loss function for pascal voc segmentation
 def softmax_sparse_crossentropy_ignoring_last_label(y_true, y_pred):
     y_pred = K.reshape(y_pred, (-1, K.int_shape(y_pred)[-1]))
     log_softmax = tf.nn.log_softmax(y_pred)
