@@ -46,7 +46,7 @@ if __name__ == '__main__':
         # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
         val_file_path   = os.path.expanduser('~/datasets/coco/annotations/test2014.txt')
         data_dir        = os.path.expanduser('~/datasets/coco/train2014')
-        label_dir       = os.path.expanduser('~/datasets/coco/seg_mask')
+        label_dir       = os.path.expanduser('~/datasets/coco/seg_mask/train2014')
         stats_file = os.path.expanduser('~datasets/coco/seg_mask/train2014/image_segmentation_class_stats.json')
         # class_weight = data_coco.class_weight(image_segmentation_stats_file=stats_file)
         class_weight = None
