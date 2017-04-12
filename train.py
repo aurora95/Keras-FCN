@@ -7,6 +7,7 @@ import pickle
 from keras.optimizers import SGD, Adam
 from keras.callbacks import *
 from keras.objectives import *
+from keras.metrics import binary_accuracy
 from keras.models import load_model
 import keras.backend as K
 #import keras.utils.visualize_util as vis_util
