@@ -19,7 +19,7 @@ import time
 
 
 def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
-            data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False, class_weight=None):
+            data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False, class_weight=None, dataset='VOC2012'):
     if target_size:
         input_shape = target_size + (3,)
     else:
@@ -67,9 +67,18 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
 
     model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
+
+    ####################### optimizer ########################
     # optimizer = SGD(lr=lr_base, momentum=0.9)
     optimizer = Adam()
-    model.compile(loss=softmax_sparse_crossentropy_ignoring_last_label,
+
+    ####################### loss function ########################
+    if dataset is 'VOC2012':
+        loss_fn = softmax_sparse_crossentropy_ignoring_last_label
+    if dataset is 'COCO':
+        def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
+
+    model.compile(loss=loss_fn,
                   optimizer=optimizer,
                   metrics=[sparse_accuracy_ignoring_last_label])
     if resume_training:

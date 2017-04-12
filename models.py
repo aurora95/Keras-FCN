@@ -20,6 +20,24 @@ from utils.resnet_helpers import *
 from utils.BilinearUpSampling import *
 
 
+def top(x, input_shape, classes, activation, weight_decay):
+
+    x = Conv2D(classes, (1, 1), activation='linear',
+               padding='same', kernel_regularizer=l2(weight_decay),
+               use_bias=False)(x)
+
+    if K.image_data_format() == 'channels_first':
+        channel, row, col = input_shape
+    else:
+        row, col, channel = input_shape
+
+    # TODO(ahundt) this is modified for the sigmoid case! also use loss_shape
+    if activation is 'sigmoid':
+        x = Reshape((row * col * classes,))(x)
+
+    return x
+
+
 def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
@@ -70,6 +88,7 @@ def FCN_Vgg16_32s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_s
     weights_path = os.path.expanduser(os.path.join('~', '.keras/models/fcn_vgg16_weights_tf_dim_ordering_tf_kernels.h5'))
     model.load_weights(weights_path, by_name=True)
     return model
+
 
 def AtrousFCN_Vgg16_16s(input_shape=None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
@@ -167,6 +186,7 @@ def FCN_Resnet50_32s(input_shape = None, weight_decay=0., batch_momentum=0.9, ba
     model.load_weights(weights_path, by_name=True)
     return model
 
+
 def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0.9, batch_shape=None, classes=21):
     if batch_shape:
         img_input = Input(batch_shape=batch_shape)
@@ -214,14 +234,14 @@ def AtrousFCN_Resnet50_16s(input_shape = None, weight_decay=0., batch_momentum=0
 
 def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                     batch_momentum=0.9, batch_shape=None, classes=21,
-                    include_top=False):
+                    include_top=False, activation='sigmoid'):
     # TODO(ahundt) pass the parameters but use defaults for now
     if include_top is True:
         # TODO(ahundt) Softmax is pre-applied, so need different train, inference, evaluate.
         # TODO(ahundt) for multi-label try per class sigmoid top as follows:
-        # x = Reshape((row * col * nb_classes))(x)
+        # x = Reshape((row * col * classes))(x)
         # x = Activation('sigmoid')(x)
-        # x = Reshape((row, col, nb_classes))(x)
+        # x = Reshape((row, col, classes))(x)
         return densenet.DenseNet(depth=None, nb_dense_block=3, growth_rate=32,
                                  nb_filter=-1, nb_layers_per_block=[6, 12, 24, 16],
                                  bottleneck=True, reduction=0.5, dropout_rate=0.2,
@@ -258,9 +278,8 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
                                     transition_pooling=None,
                                     include_top=include_top)
 
-    x = Conv2D(classes, (1, 1), activation='linear',
-               padding='same', kernel_regularizer=l2(weight_decay),
-               use_bias=False)(x)
+    x = top(x, input_shape, classes, activation, weight_decay)
+
     model = Model(img_input, x, name='Atrous_DenseNet')
     # TODO(ahundt) add weight loading
     return model
@@ -268,7 +287,7 @@ def Atrous_DenseNet(input_shape=None, weight_decay=1E-4,
 
 def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                  batch_momentum=0.9, batch_shape=None, classes=21,
-                 include_top=False):
+                 include_top=False, activation='sigmoid'):
     if include_top is True:
         # TODO(ahundt) Softmax is pre-applied, so need different train, inference, evaluate.
         # TODO(ahundt) for multi-label try per class sigmoid top as follows:
@@ -302,9 +321,7 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
                                         dropout_rate=0.2,
                                         include_top=include_top)
 
-    x = Conv2D(classes, (1, 1), activation='linear',
-               padding='same', kernel_regularizer=l2(weight_decay),
-               use_bias=False)(x)
+    x = top(x, input_shape, classes, activation, weight_decay)
     # TODO(ahundt) add weight loading
     model = Model(img_input, x, name='DenseNet_FCN')
     return model
