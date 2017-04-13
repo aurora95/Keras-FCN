@@ -85,12 +85,14 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         loss_shape = None
         label_suffix = '.png'
         ignore_label = 255
+        label_cval = 255
     if dataset is 'COCO':
         loss_fn = binary_crossentropy_with_logits
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * classes,)
         label_suffix = '.npy'
         ignore_label = None
+        label_cval = 0
 
     model.compile(loss=loss_fn,
                   optimizer=optimizer,
@@ -131,7 +133,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
                                      horizontal_flip=True,
                                      channel_shift_range=20.,
                                      fill_mode='constant',
-                                     label_cval=255)
+                                     label_cval=label_cval)
     val_datagen = SegDataGenerator()
 
     def get_file_len(file_path):
