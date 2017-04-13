@@ -177,6 +177,7 @@ class SegDirectoryIterator(Iterator):
         # The transformation of images is not under thread lock so it can be
         # done in parallel
         if self.target_size:
+            # TODO(ahundt) make dtype properly configurable
             batch_x = np.zeros((current_batch_size,) + self.image_shape)
             if self.loss_shape is None and self.label_file_format is 'img':
                 batch_y = np.zeros((current_batch_size,) + self.label_shape,
@@ -184,7 +185,8 @@ class SegDirectoryIterator(Iterator):
             elif self.loss_shape is None:
                 batch_y = np.zeros((current_batch_size,) + self.label_shape)
             else:
-                batch_y = np.zeros((current_batch_size,) + self.loss_shape)
+                batch_y = np.zeros((current_batch_size,) + self.loss_shape,
+                                   dtype=np.uint8)
         grayscale = self.color_mode == 'grayscale'
         # build batch of image data and labels
         for i, j in enumerate(index_array):
