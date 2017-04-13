@@ -88,7 +88,7 @@ class SegDirectoryIterator(Iterator):
 
     def __init__(self, file_path, seg_data_generator,
                  data_dir, data_suffix,
-                 label_dir, label_suffix, nb_classes, ignore_label=255,
+                 label_dir, label_suffix, classes, ignore_label=255,
                  crop_mode='none', label_cval=255, pad_size=None,
                  target_size=None, color_mode='rgb',
                  data_format='default', class_mode='sparse',
@@ -102,7 +102,7 @@ class SegDirectoryIterator(Iterator):
         self.data_suffix = data_suffix
         self.label_suffix = label_suffix
         self.label_dir = label_dir
-        self.nb_classes = nb_classes
+        self.classes = classes
         self.seg_data_generator = seg_data_generator
         self.target_size = tuple(target_size)
         self.ignore_label = ignore_label
@@ -244,7 +244,7 @@ class SegDirectoryIterator(Iterator):
             x = self.seg_data_generator.standardize(x)
 
             if self.ignore_label:
-                y[np.where(y == self.ignore_label)] = self.nb_classes
+                y[np.where(y == self.ignore_label)] = self.classes
 
             if self.loss_shape is not None:
                 y = np.reshape(y, self.loss_shape)
@@ -256,7 +256,7 @@ class SegDirectoryIterator(Iterator):
             for i in range(current_batch_size):
                 img = array_to_img(batch_x[i], self.data_format, scale=True)
                 label = batch_y[i][:, :, 0].astype('uint8')
-                label[np.where(label == self.nb_classes)] = self.ignore_label
+                label[np.where(label == self.classes)] = self.ignore_label
                 label = Image.fromarray(label, mode='P')
                 label.palette = self.palette
                 fname = '{prefix}_{index}_{hash}'.format(prefix=self.save_prefix,
@@ -335,7 +335,7 @@ class SegDataGenerator(object):
                             'Received arg: ', zoom_range)
 
     def flow_from_directory(self, file_path, data_dir, data_suffix,
-                            label_dir, label_suffix, nb_classes,
+                            label_dir, label_suffix, classes,
                             ignore_label=255,
                             target_size=None, color_mode='rgb',
                             class_mode='sparse',
@@ -348,7 +348,7 @@ class SegDataGenerator(object):
             file_path, self,
             data_dir=data_dir, data_suffix=data_suffix,
             label_dir=label_dir, label_suffix=label_suffix,
-            nb_classes=nb_classes, ignore_label=ignore_label,
+            classes=classes, ignore_label=ignore_label,
             crop_mode=self.crop_mode, label_cval=self.label_cval,
             pad_size=self.pad_size,
             target_size=target_size, color_mode=color_mode,
