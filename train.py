@@ -19,8 +19,10 @@ from utils.SegDataGenerator import *
 import time
 
 
-def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
-            data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False, class_weight=None, dataset='VOC2012'):
+def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
+          model_name, train_file_path, val_file_path,
+          data_dir, label_dir, target_size=None, batchnorm_momentum=0.9,
+          resume_training=False, class_weight=None, dataset='VOC2012'):
     if target_size:
         input_shape = target_size + (3,)
     else:
@@ -30,10 +32,10 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
     ###########################################################
     current_dir = os.path.dirname(os.path.realpath(__file__))
     save_path = os.path.join(current_dir, 'Models/' + model_name)
-    if os.path.exists(save_path) == False:
+    if os.path.exists(save_path) is False:
         os.mkdir(save_path)
 
-    ################learning rate scheduler####################
+    # ###############learning rate scheduler####################
     def lr_scheduler(epoch, mode='adam'):
         '''if lr_dict.has_key(epoch):
             lr = lr_dict[epoch]
@@ -64,16 +66,19 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
         return lr
     scheduler = LearningRateScheduler(lr_scheduler)
 
-    ####################### make model ########################
+    # ###################### make model ########################
     checkpoint_path = os.path.join(save_path, 'checkpoint_weights.hdf5')
 
-    model = globals()[model_name](weight_decay=weight_decay, input_shape=input_shape, batch_momentum=batchnorm_momentum)
+    model = globals()[model_name](weight_decay=weight_decay,
+                                  input_shape=input_shape,
+                                  batch_momentum=batchnorm_momentum,
+                                  classes=classes)
 
-    ####################### optimizer ########################
+    # ###################### optimizer ########################
     # optimizer = SGD(lr=lr_base, momentum=0.9)
     optimizer = Adam()
 
-    ####################### loss function & metric ########################
+    # ###################### loss function & metric ########################
     if dataset is 'VOC2012':
         loss_fn = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
@@ -82,7 +87,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
     if dataset is 'COCO':
         def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
         metrics = [binary_accuracy]
-        loss_shape = (target_size[0] * target_size[1] * nb_classes,)
+        loss_shape = (target_size[0] * target_size[1] * classes,)
         label_suffix = '.npy'
 
     model.compile(loss=loss_fn,
@@ -106,11 +111,11 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
     # callbacks = [early_stopper, lr_reducer]
     callbacks = [scheduler]
 
-    ######################## tfboard ###########################
+    # ####################### tfboard ###########################
     if K.backend() == 'tensorflow':
         tensorboard = TensorBoard(log_dir=os.path.join(save_path, 'logs'), histogram_freq=10, write_graph=True)
         callbacks.append(tensorboard)
-    #################### checkpoint saver#######################
+    # ################### checkpoint saver#######################
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
@@ -137,7 +142,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
             file_path=train_file_path,
             data_dir=data_dir, data_suffix='.jpg',
             label_dir=label_dir, label_suffix=label_suffix,
-            nb_classes=nb_classes,
+            classes=classes,
             target_size=target_size, color_mode='rgb',
             batch_size=batch_size, shuffle=True,
             loss_shape=loss_shape,
@@ -149,7 +154,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model
         # nb_worker=4,
         # validation_data=val_datagen.flow_from_directory(
         #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
-        #     label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
+        #     label_dir=label_dir, label_suffix='.png',classes=classes,
         #     target_size=target_size, color_mode='rgb',
         #     batch_size=batch_size, shuffle=False
         # ),
@@ -173,7 +178,7 @@ if __name__ == '__main__':
         weight_decay = 0.0001/2
     else:
         weight_decay = 1e-4
-    nb_classes = 21
+    classes = 21
     target_size = (320, 320)
     train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
     # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
@@ -181,7 +186,7 @@ if __name__ == '__main__':
     data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
     label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
     # Class weight is not yet supported for 3+ dimensional targets
-    # class_weight = {i: 1 for i in range(nb_classes)}
+    # class_weight = {i: 1 for i in range(classes)}
     # # The background class is much more common than all
     # # others, so give it less weight!
     # class_weight[0] = 0.1
@@ -190,6 +195,6 @@ if __name__ == '__main__':
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)
-    train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
+    train(batch_size, epochs, lr_base, lr_power, weight_decay, classes, model_name, train_file_path, val_file_path,
           data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training,
           class_weight=class_weight)

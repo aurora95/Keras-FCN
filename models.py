@@ -291,9 +291,9 @@ def DenseNet_FCN(input_shape=None, weight_decay=1E-4,
     if include_top is True:
         # TODO(ahundt) Softmax is pre-applied, so need different train, inference, evaluate.
         # TODO(ahundt) for multi-label try per class sigmoid top as follows:
-        # x = Reshape((row * col * nb_classes))(x)
+        # x = Reshape((row * col * classes))(x)
         # x = Activation('sigmoid')(x)
-        # x = Reshape((row, col, nb_classes))(x)
+        # x = Reshape((row, col, classes))(x)
         return densenet.DenseNetFCN(input_shape=input_shape,
                                     weights=None, classes=classes,
                                     nb_layers_per_block=[4, 5, 7, 10, 12, 15],
