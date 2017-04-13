@@ -84,11 +84,13 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         metrics = [sparse_accuracy_ignoring_last_label]
         loss_shape = None
         label_suffix = '.png'
+        ignore_label = 255
     if dataset is 'COCO':
         loss_fn = binary_crossentropy_with_logits
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * classes,)
         label_suffix = '.npy'
+        ignore_label = None
 
     model.compile(loss=loss_fn,
                   optimizer=optimizer,
@@ -146,6 +148,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
             target_size=target_size, color_mode='rgb',
             batch_size=batch_size, shuffle=True,
             loss_shape=loss_shape,
+            ignore_label=ignore_label,
             # save_to_dir='Images/'
         ),
         steps_per_epoch=get_file_len(train_file_path),
