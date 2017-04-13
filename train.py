@@ -165,14 +165,14 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         # ),
         # nb_val_samples = 64
         class_weight=class_weight
-                            )
+       )
 
     model.save_weights(save_path+'/model.hdf5')
 
 if __name__ == '__main__':
-    # model_name = 'AtrousFCN_Resnet50_16s'
+    model_name = 'AtrousFCN_Resnet50_16s'
     #model_name = 'Atrous_DenseNet'
-    model_name = 'DenseNet_FCN'
+    #model_name = 'DenseNet_FCN'
     batch_size = 2
     batchnorm_momentum = 0.95
     epochs = 450
@@ -185,11 +185,11 @@ if __name__ == '__main__':
         weight_decay = 1e-4
     classes = 21
     target_size = (320, 320)
-    train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-    # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-    val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
-    data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
-    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+    train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+    val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
+    data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+    label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
     # Class weight is not yet supported for 3+ dimensional targets
     # class_weight = {i: 1 for i in range(classes)}
     # # The background class is much more common than all

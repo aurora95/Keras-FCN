@@ -34,20 +34,20 @@ if __name__ == '__main__':
     target_size = (320, 320)
     dataset = 'COCO'
     if dataset is 'VOC2012':
-        train_file_path = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-        # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-        val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
-        data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
-        label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+        train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
+        data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+        label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
         classes = 21
         class_weight = None
     elif dataset is 'COCO':
-        train_file_path = os.path.expanduser('~/datasets/coco/annotations/train2014.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-        # train_file_path = os.path.expanduser('~/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
-        val_file_path   = os.path.expanduser('~/datasets/coco/annotations/test2014.txt')
-        data_dir        = os.path.expanduser('~/datasets/coco/train2014')
-        label_dir       = os.path.expanduser('~/datasets/coco/seg_mask/train2014')
-        stats_file = os.path.expanduser('~datasets/coco/seg_mask/train2014/image_segmentation_class_stats.json')
+        train_file_path = os.path.expanduser('~/.keras/datasets/coco/annotations/train2014.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        val_file_path   = os.path.expanduser('~/.keras/datasets/coco/annotations/test2014.txt')
+        data_dir        = os.path.expanduser('~/.keras/datasets/coco/train2014')
+        label_dir       = os.path.expanduser('~/.keras/datasets/coco/seg_mask/train2014')
+        stats_file = os.path.expanduser('~/.keras/datasets/coco/seg_mask/train2014/image_segmentation_class_stats.json')
         classes = 91
         # class_weight = data_coco.class_weight(image_segmentation_stats_file=stats_file)
         class_weight = None
