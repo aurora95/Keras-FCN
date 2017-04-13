@@ -49,6 +49,7 @@ def calculate_iou(model_name, nb_classes, res_dir, label_dir, image_list):
     meanIOU = np.mean(IOU)
     return conf_m, IOU, meanIOU
 
+
 def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_file_path, data_dir, label_dir):
     current_dir = os.path.dirname(os.path.realpath(__file__))
     save_dir = os.path.join(current_dir, 'Models/'+model_name+'/res/')
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     image_size = (512, 512)
     nb_classes = 21
     batch_size = 1
-    val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
-    data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
-    label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+    val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
+    data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+    label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
     evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_file_path, data_dir, label_dir)
