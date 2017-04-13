@@ -83,7 +83,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * nb_classes,)
-        label_suffix = '.pyc'
+        label_suffix = '.npy'
 
 
     model.compile(loss=loss_fn,
