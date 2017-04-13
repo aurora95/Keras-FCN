@@ -19,7 +19,7 @@ from utils.SegDataGenerator import *
 import time
 
 
-def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
+def train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
             data_dir, label_dir, target_size=None, batchnorm_momentum=0.9, resume_training=False, class_weight=None, dataset='VOC2012'):
     if target_size:
         input_shape = target_size + (3,)
@@ -41,7 +41,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
 
         if mode is 'power_decay':
             # original lr scheduler
-            lr = lr_base * ((1 - float(epoch)/nb_epoch) ** lr_power)
+            lr = lr_base * ((1 - float(epoch)/epochs) ** lr_power)
         if mode is 'exp_decay':
             # exponential decay
             lr = (float(lr_base) ** float(lr_power)) ** float(epoch+1)
@@ -51,11 +51,11 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
 
         if mode is 'progressive_drops':
             # drops as progression proceeds, good for sgd
-            if epoch > 0.9 * nb_epoch:
+            if epoch > 0.9 * epochs:
                 lr = 0.0001
-            elif epoch > 0.75 * nb_epoch:
+            elif epoch > 0.75 * epochs:
                 lr = 0.001
-            elif epoch > 0.5 * nb_epoch:
+            elif epoch > 0.5 * epochs:
                 lr = 0.01
             else:
                 lr = 0.1
@@ -114,11 +114,17 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     checkpoint = ModelCheckpoint(filepath=os.path.join(save_path, 'checkpoint_weights.hdf5'), save_weights_only=True)#.{epoch:d}
     callbacks.append(checkpoint)
     # set data generator and train
-    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0], zoom_maintain_shape=True,
-                                    crop_mode='random', crop_size=target_size, #pad_size=(505, 505),
-                                    rotation_range=0., shear_range=0, horizontal_flip=True,
-                                    channel_shift_range=20.,
-                                    fill_mode='constant', label_cval=255)
+    train_datagen = SegDataGenerator(zoom_range=[0.5, 2.0],
+                                     zoom_maintain_shape=True,
+                                     crop_mode='random',
+                                     crop_size=target_size,
+                                     # pad_size=(505, 505),
+                                     rotation_range=0.,
+                                     shear_range=0,
+                                     horizontal_flip=True,
+                                     channel_shift_range=20.,
+                                     fill_mode='constant',
+                                     label_cval=255)
     val_datagen = SegDataGenerator()
 
     def get_file_len(file_path):
@@ -127,26 +133,28 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         fp.close()
         return len(lines)
     history = model.fit_generator(
-                                generator=train_datagen.flow_from_directory(
-                                    file_path=train_file_path, data_dir=data_dir, data_suffix='.jpg',
-                                    label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes,
-                                    target_size=target_size, color_mode='rgb',
-                                    batch_size=batch_size, shuffle=True,
-                                    loss_shape=loss_shape,
-                                    #save_to_dir='Images/'
-                                ),
-                                samples_per_epoch=get_file_len(train_file_path),
-                                nb_epoch=nb_epoch,
-                                callbacks=callbacks,
-				                # nb_worker=4,
-                                # validation_data=val_datagen.flow_from_directory(
-                                #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
-                                #     label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
-                                #     target_size=target_size, color_mode='rgb',
-                                #     batch_size=batch_size, shuffle=False
-                                # ),
-                                # nb_val_samples = 64
-                                class_weight=class_weight
+        generator=train_datagen.flow_from_directory(
+            file_path=train_file_path,
+            data_dir=data_dir, data_suffix='.jpg',
+            label_dir=label_dir, label_suffix=label_suffix,
+            nb_classes=nb_classes,
+            target_size=target_size, color_mode='rgb',
+            batch_size=batch_size, shuffle=True,
+            loss_shape=loss_shape,
+            # save_to_dir='Images/'
+        ),
+        steps_per_epoch=get_file_len(train_file_path),
+        epochs=epochs,
+        callbacks=callbacks,
+        # nb_worker=4,
+        # validation_data=val_datagen.flow_from_directory(
+        #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
+        #     label_dir=label_dir, label_suffix='.png',nb_classes=nb_classes,
+        #     target_size=target_size, color_mode='rgb',
+        #     batch_size=batch_size, shuffle=False
+        # ),
+        # nb_val_samples = 64
+        class_weight=class_weight
                             )
 
     model.save_weights(save_path+'/model.hdf5')
@@ -157,7 +165,7 @@ if __name__ == '__main__':
     model_name = 'DenseNet_FCN'
     batch_size = 2
     batchnorm_momentum = 0.95
-    nb_epoch = 450
+    epochs = 450
     lr_base = 0.2 * (float(batch_size) / 4)
     lr_power = float(1)/float(30)
     resume_training = False
@@ -182,6 +190,6 @@ if __name__ == '__main__':
     config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
     session = tf.Session(config=config)
     K.set_session(session)
-    train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
+    train(batch_size, epochs, lr_base, lr_power, weight_decay, nb_classes, model_name, train_file_path, val_file_path,
           data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training,
           class_weight=class_weight)
