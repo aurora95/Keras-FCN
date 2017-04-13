@@ -78,10 +78,12 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
         loss_fn = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
         loss_shape = None
+        label_suffix = '.png'
     if dataset is 'COCO':
         def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * nb_classes,)
+        label_suffix = '.pyc'
 
 
     model.compile(loss=loss_fn,
@@ -128,7 +130,7 @@ def train(batch_size, nb_epoch, lr_base, lr_power, weight_decay, nb_classes, mod
     history = model.fit_generator(
                                 generator=train_datagen.flow_from_directory(
                                     file_path=train_file_path, data_dir=data_dir, data_suffix='.jpg',
-                                    label_dir=label_dir, label_suffix='.png', nb_classes=nb_classes,
+                                    label_dir=label_dir, label_suffix=label_suffix, nb_classes=nb_classes,
                                     target_size=target_size, color_mode='rgb',
                                     batch_size=batch_size, shuffle=True,
                                     loss_shape=loss_shape,
