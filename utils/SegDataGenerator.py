@@ -184,7 +184,7 @@ class SegDirectoryIterator(Iterator):
                            grayscale=grayscale, target_size=None)
             label_filepath = os.path.join(self.label_dir, label_file)
 
-            if self.label_suffix is '.npy' or self.label_suffix is 'npy':
+            if ((self.label_suffix == '.npy') or (self.label_suffix == 'npy')):
                 y = np.load(label_filepath)
                 label_file_format = 'npy'
             else:

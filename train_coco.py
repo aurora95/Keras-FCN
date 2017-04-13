@@ -31,7 +31,6 @@ if __name__ == '__main__':
     lr_power = float(1)/float(30)
     resume_training=False
     weight_decay = 0.0001/2
-    nb_classes = 21
     target_size = (320, 320)
     dataset = 'COCO'
     if dataset is 'VOC2012':
@@ -40,6 +39,7 @@ if __name__ == '__main__':
         val_file_path   = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
         data_dir        = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+        nb_classes = 21
         class_weight = None
     elif dataset is 'COCO':
         train_file_path = os.path.expanduser('~/datasets/coco/annotations/train2014.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
@@ -48,6 +48,7 @@ if __name__ == '__main__':
         data_dir        = os.path.expanduser('~/datasets/coco/train2014')
         label_dir       = os.path.expanduser('~/datasets/coco/seg_mask/train2014')
         stats_file = os.path.expanduser('~datasets/coco/seg_mask/train2014/image_segmentation_class_stats.json')
+        nb_classes = 91
         # class_weight = data_coco.class_weight(image_segmentation_stats_file=stats_file)
         class_weight = None
 
