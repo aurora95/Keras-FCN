@@ -184,7 +184,7 @@ class SegDirectoryIterator(Iterator):
                            grayscale=grayscale, target_size=None)
             label_filepath = os.path.join(self.label_dir, label_file)
 
-            if ((self.label_suffix == '.npy') or (self.label_suffix == 'npy')):
+            if (self.label_suffix == '.npy') or (self.label_suffix == 'npy'):
                 y = np.load(label_filepath)
                 label_file_format = 'npy'
             else:
@@ -226,7 +226,10 @@ class SegDirectoryIterator(Iterator):
 
             if self.target_size is None:
                 batch_x = np.zeros((current_batch_size,) + x.shape)
-                batch_y = np.zeros((current_batch_size,) + y.shape)
+                if self.loss_shape is not None:
+                    batch_y = np.zeros((current_batch_size,) + self.loss_shape)
+                else:
+                    batch_y = np.zeros((current_batch_size,) + y.shape)
 
             x, y = self.seg_data_generator.random_transform(x, y)
             x = self.seg_data_generator.standardize(x)
