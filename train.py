@@ -79,14 +79,14 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
     optimizer = Adam()
 
     # ###################### loss function & metric ########################
-    if dataset is 'VOC2012':
+    if dataset == 'VOC2012' or dataset == 'VOC2012_BERKELEY':
         loss_fn = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
         loss_shape = None
         label_suffix = '.png'
         ignore_label = 255
         label_cval = 255
-    if dataset is 'COCO':
+    if dataset == 'COCO':
         loss_fn = binary_crossentropy_with_logits
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * classes,)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     model_name = 'AtrousFCN_Resnet50_16s'
     #model_name = 'Atrous_DenseNet'
     #model_name = 'DenseNet_FCN'
-    batch_size = 2
+    batch_size = 4
     batchnorm_momentum = 0.95
     epochs = 450
     lr_base = 0.2 * (float(batch_size) / 4)
@@ -185,8 +185,8 @@ if __name__ == '__main__':
         weight_decay = 1e-4
     classes = 21
     target_size = (320, 320)
-    dataset = 'voc_combined'
-    if dataset == 'voc_combined':
+    dataset = 'VOC2012_BERKELEY'
+    if dataset == 'VOC2012_BERKELEY':
         # pascal voc + berkeley semantic contours annotations
         train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
         # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation

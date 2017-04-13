@@ -33,6 +33,13 @@ if __name__ == '__main__':
     weight_decay = 0.0001/2
     target_size = (320, 320)
     dataset = 'COCO'
+    if dataset == 'VOC2012_BERKELEY':
+        # pascal voc + berkeley semantic contours annotations
+        train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_val.txt')
+        data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+        label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
     if dataset is 'VOC2012':
         train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
         # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
