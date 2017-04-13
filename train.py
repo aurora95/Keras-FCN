@@ -85,7 +85,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         loss_shape = None
         label_suffix = '.png'
     if dataset is 'COCO':
-        def loss_fn(predictions, ground_truth): return K.binary_crossentropy(predictions, ground_truth, from_logits=True)
+        loss_fn = binary_crossentropy_with_logits
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * classes,)
         label_suffix = '.npy'
