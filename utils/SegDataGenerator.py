@@ -116,6 +116,11 @@ class SegDirectoryIterator(Iterator):
         self.data_format = data_format
         self.nb_label_ch = 1
         self.loss_shape = loss_shape
+
+        if (self.label_suffix == '.npy') or (self.label_suffix == 'npy'):
+            self.label_file_format = 'npy'
+        else:
+            self.label_file_format = 'img'
         if target_size:
             if self.color_mode == 'rgb':
                 if self.data_format == 'channels_last':
@@ -168,12 +173,18 @@ class SegDirectoryIterator(Iterator):
         with self.lock:
             index_array, current_index, current_batch_size = next(
                 self.index_generator)
+
         # The transformation of images is not under thread lock so it can be
         # done in parallel
         if self.target_size:
             batch_x = np.zeros((current_batch_size,) + self.image_shape)
-            batch_y = np.zeros((current_batch_size,) +
-                               self.label_shape, dtype=int)
+            if self.loss_shape is None and self.label_file_format is 'img':
+                batch_y = np.zeros((current_batch_size,) + self.label_shape,
+                                   dtype=int)
+            elif self.loss_shape is None:
+                batch_y = np.zeros((current_batch_size,) + self.label_shape)
+            else:
+                batch_y = np.zeros((current_batch_size,) + self.loss_shape)
         grayscale = self.color_mode == 'grayscale'
         # build batch of image data and labels
         for i, j in enumerate(index_array):
@@ -184,12 +195,10 @@ class SegDirectoryIterator(Iterator):
                            grayscale=grayscale, target_size=None)
             label_filepath = os.path.join(self.label_dir, label_file)
 
-            if (self.label_suffix == '.npy') or (self.label_suffix == 'npy'):
+            if self.label_file_format == 'npy':
                 y = np.load(label_filepath)
-                label_file_format = 'npy'
             else:
                 label = Image.open(label_filepath)
-                label_file_format = 'img'
                 if self.save_to_dir and self.palette is None:
                     self.palette = label.palette
 
@@ -197,7 +206,7 @@ class SegDirectoryIterator(Iterator):
             if self.target_size:
                 if self.crop_mode != 'none':
                     x = img_to_array(img, data_format=self.data_format)
-                    if label_file_format is not 'npy':
+                    if self.label_file_format is not 'npy':
                         y = img_to_array(
                             label, data_format=self.data_format).astype(int)
                     img_w, img_h = img.size
@@ -218,7 +227,7 @@ class SegDirectoryIterator(Iterator):
                     x = img_to_array(img.resize((self.target_size[1], self.target_size[0]),
                                                 Image.BILINEAR),
                                      data_format=self.data_format)
-                    if label_file_format is not 'npy':
+                    if self.label_file_format is not 'npy':
                         y = img_to_array(label.resize((self.target_size[1], self.target_size[
                                          0]), Image.NEAREST), data_format=self.data_format).astype(int)
                     else:
