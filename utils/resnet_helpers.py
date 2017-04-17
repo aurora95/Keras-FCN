@@ -13,7 +13,7 @@ def identity_block(kernel_size, filters, stage, block, weight_decay=0., batch_mo
     '''
     def f(input_tensor):
         nb_filter1, nb_filter2, nb_filter3 = filters
-        if K.image_dim_ordering() == 'tf':
+        if K.image_data_format() == 'channels_last':
             bn_axis = 3
         else:
             bn_axis = 1
@@ -49,7 +49,7 @@ def conv_block(kernel_size, filters, stage, block, weight_decay=0., strides=(2, 
     '''
     def f(input_tensor):
         nb_filter1, nb_filter2, nb_filter3 = filters
-        if K.image_dim_ordering() == 'tf':
+        if K.image_data_format() == 'channels_last':
             bn_axis = 3
         else:
             bn_axis = 1
@@ -89,7 +89,7 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., a
     '''
     def f(input_tensor):
         nb_filter1, nb_filter2, nb_filter3 = filters
-        if K.image_dim_ordering() == 'tf':
+        if K.image_data_format() == 'channels_last':
             bn_axis = 3
         else:
             bn_axis = 1
@@ -123,7 +123,7 @@ def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strid
     '''
     def f(input_tensor):
         nb_filter1, nb_filter2, nb_filter3 = filters
-        if K.image_dim_ordering() == 'tf':
+        if K.image_data_format() == 'channels_last':
             bn_axis = 3
         else:
             bn_axis = 1
