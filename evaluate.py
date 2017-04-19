@@ -75,14 +75,25 @@ def evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_fi
 
 if __name__ == '__main__':
     # model_name = 'Atrous_DenseNet'
-    # model_name = 'AtrousFCN_Resnet50_16s'
-    model_name = 'DenseNet_FCN'
+    model_name = 'AtrousFCN_Resnet50_16s'
+    # model_name = 'DenseNet_FCN'
     weight_file = 'checkpoint_weights.hdf5'
     # weight_file = 'model.hdf5'
     image_size = (512, 512)
     nb_classes = 21
     batch_size = 1
-    val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
-    data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
-    label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+    dataset = 'VOC2012_BERKELEY'
+    if dataset == 'VOC2012_BERKELEY':
+        # pascal voc + berkeley semantic contours annotations
+        train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_val.txt')
+        data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+        label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
+    else:
+        train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
+        val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
+        data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
+        label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
     evaluate(model_name, weight_file, image_size, nb_classes, batch_size, val_file_path, data_dir, label_dir)

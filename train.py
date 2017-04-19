@@ -36,7 +36,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         os.mkdir(save_path)
 
     # ###############learning rate scheduler####################
-    def lr_scheduler(epoch, mode='adam'):
+    def lr_scheduler(epoch, mode='power_decay'):
         '''if lr_dict.has_key(epoch):
             lr = lr_dict[epoch]
             print 'lr: %f' % lr'''
@@ -173,11 +173,11 @@ if __name__ == '__main__':
     model_name = 'AtrousFCN_Resnet50_16s'
     #model_name = 'Atrous_DenseNet'
     #model_name = 'DenseNet_FCN'
-    batch_size = 4
+    batch_size = 16
     batchnorm_momentum = 0.95
-    epochs = 450
-    lr_base = 0.2 * (float(batch_size) / 4)
-    lr_power = float(1)/float(30)
+    epochs = 250
+    lr_base = 0.01 * (float(batch_size) / 16)
+    lr_power = 0.9
     resume_training = False
     if model_name is 'AtrousFCN_Resnet50_16s':
         weight_decay = 0.0001/2
