@@ -173,10 +173,10 @@ if __name__ == '__main__':
     model_name = 'AtrousFCN_Resnet50_16s'
     #model_name = 'Atrous_DenseNet'
     #model_name = 'DenseNet_FCN'
-    batch_size = 8
+    batch_size = 32
     batchnorm_momentum = 0.95
     epochs = 250
-    lr_base = 0.2 * (float(batch_size) / 4)
+    lr_base = 0.01 * (float(batch_size) / 16)
     lr_power = 0.9
     resume_training = False
     if model_name is 'AtrousFCN_Resnet50_16s':
