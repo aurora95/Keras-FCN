@@ -4,7 +4,7 @@ from pylab import *
 import os
 import sys
 import pickle
-from keras.optimizers import SGD, Adam
+from keras.optimizers import SGD, Adam, Nadam
 from keras.callbacks import *
 from keras.objectives import *
 from keras.metrics import binary_accuracy
@@ -75,8 +75,8 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
                                   classes=classes)
 
     # ###################### optimizer ########################
-    # optimizer = SGD(lr=lr_base, momentum=0.9)
-    optimizer = Adam()
+    optimizer = SGD(lr=lr_base, momentum=0.9)
+    # optimizer = Nadam(lr=lr_base, beta_1 = 0.825, beta_2 = 0.99685)
 
     # ###################### loss function & metric ########################
     if dataset == 'VOC2012' or dataset == 'VOC2012_BERKELEY':
@@ -156,7 +156,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         steps_per_epoch=get_file_len(train_file_path),
         epochs=epochs,
         callbacks=callbacks,
-        # nb_worker=4,
+        nb_worker=4,
         # validation_data=val_datagen.flow_from_directory(
         #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
         #     label_dir=label_dir, label_suffix='.png',classes=classes,
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     batch_size = 16
     batchnorm_momentum = 0.95
     epochs = 250
-    lr_base = 0.01 * (float(batch_size) / 16)
+    lr_base = 0.04 * (float(batch_size) / 16)
     lr_power = 0.9
     resume_training = False
     if model_name is 'AtrousFCN_Resnet50_16s':
