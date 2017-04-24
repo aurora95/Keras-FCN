@@ -9,62 +9,74 @@ import cv2
 
 def center_crop(x, center_crop_size, data_format, **kwargs):
     if data_format == 'channels_first':
-        centerw, centerh = x.shape[1] // 2, x.shape[2] // 2
+        centerh, centerw = x.shape[1] // 2, x.shape[2] // 2
     elif data_format == 'channels_last':
-        centerw, centerh = x.shape[0] // 2, x.shape[1] // 2
-    lw, lh = center_crop_size[0] // 2, center_crop_size[1] // 2
-    rw, rh = center_crop_size[0] - lw, center_crop_size[1] - lh
+        centerh, centerw = x.shape[0] // 2, x.shape[1] // 2
+    lh, lw = center_crop_size[0] // 2, center_crop_size[1] // 2
+    rh, rw = center_crop_size[0] - lh, center_crop_size[1] - lw
+
+    h_start, h_end = centerh - lh, centerh + rh
+    w_start, w_end = centerw - lw, centerw + rw
     if data_format == 'channels_first':
-        return x[:, centerw - lw:centerw + rw, centerh - lh:centerh + rh]
+        return x[:, h_start:h_end, w_start:w_end]
     elif data_format == 'channels_last':
-        return x[centerw - lw:centerw + rw, centerh - lh:centerh + rh, :]
+        return x[h_start:h_end, w_start:w_end, :]
 
 
 def pair_center_crop(x, y, center_crop_size, data_format, **kwargs):
     if data_format == 'channels_first':
-        centerw, centerh = x.shape[1] // 2, x.shape[2] // 2
+        centerh, centerw = x.shape[1] // 2, x.shape[2] // 2
     elif data_format == 'channels_last':
-        centerw, centerh = x.shape[0] // 2, x.shape[1] // 2
-    lw, lh = center_crop_size[0] // 2, center_crop_size[1] // 2
-    rw, rh = center_crop_size[0] - lw, center_crop_size[1] - lh
+        centerh, centerw = x.shape[0] // 2, x.shape[1] // 2
+    lh, lw = center_crop_size[0] // 2, center_crop_size[1] // 2
+    rh, rw = center_crop_size[0] - lh, center_crop_size[1] - lw
+
+    h_start, h_end = centerh - lh, centerh + rh
+    w_start, w_end = centerw - lw, centerw + rw
     if data_format == 'channels_first':
-        return x[:, centerw - lw:centerw + rw, centerh - lh:centerh + rh], \
-               y[:, centerw - lw:centerw + rw, centerh - lh:centerh + rh]
+        return x[:, h_start:h_end, w_start:w_end], \
+               y[:, h_start:h_end, w_start:w_end]
     elif data_format == 'channels_last':
-        return x[centerw - lw:centerw + rw, centerh - lh:centerh + rh, :], \
-               y[centerw - lw:centerw + rw, centerh - lh:centerh + rh, :]
+        return x[h_start:h_end, w_start:w_end, :], \
+               y[h_start:h_end, w_start:w_end, :]
 
 
 def random_crop(x, random_crop_size, data_format, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
     if data_format == 'channels_first':
-        w, h = x.shape[1], x.shape[2]
+        h, w = x.shape[1], x.shape[2]
     elif data_format == 'channels_last':
-        w, h = x.shape[0], x.shape[1]
-    rangew = (w - random_crop_size[0]) // 2
-    rangeh = (h - random_crop_size[1]) // 2
-    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+        h, w = x.shape[0], x.shape[1]
+    rangeh = (h - random_crop_size[0]) // 2
+    rangew = (w - random_crop_size[1]) // 2
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
+    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+
+    h_start, h_end = offseth, offseth + random_crop_size[0]
+    w_start, w_end = offsetw, offsetw + random_crop_size[1]
     if data_format == 'channels_first':
-        return x[:, offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1]]
+        return x[:, h_start:h_end, w_start:w_end]
     elif data_format == 'channels_last':
-        return x[offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1], :]
+        return x[h_start:h_end, w_start:w_end, :]
 
 
 def pair_random_crop(x, y, random_crop_size, data_format, sync_seed=None, **kwargs):
     np.random.seed(sync_seed)
     if data_format == 'channels_first':
-        w, h = x.shape[1], x.shape[2]
+        h, w = x.shape[1], x.shape[2]
     elif data_format == 'channels_last':
-        w, h = x.shape[0], x.shape[1]
-    rangew = (w - random_crop_size[0]) // 2
-    rangeh = (h - random_crop_size[1]) // 2
-    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+        h, w = x.shape[0], x.shape[1]
+    rangeh = (h - random_crop_size[0]) // 2
+    rangew = (w - random_crop_size[1]) // 2
     offseth = 0 if rangeh == 0 else np.random.randint(rangeh)
+    offsetw = 0 if rangew == 0 else np.random.randint(rangew)
+
+    h_start, h_end = offseth, offseth + random_crop_size[0]
+    w_start, w_end = offsetw, offsetw + random_crop_size[1]
     if data_format == 'channels_first':
-        return x[:, offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1]], y[:, offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1]]
+        return x[:, h_start:h_end, w_start:w_end], y[:, h_start:h_end, h_start:h_end]
     elif data_format == 'channels_last':
-        return x[offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1], :], y[offsetw:offsetw + random_crop_size[0], offseth:offseth + random_crop_size[1], :]
+        return x[h_start:h_end, w_start:w_end, :], y[h_start:h_end, w_start:w_end, :]
 
 
 class SegDirectoryIterator(Iterator):
@@ -385,7 +397,7 @@ class SegDataGenerator(object):
         img_col_index = self.col_index - 1
         img_channel_index = self.channel_index - 1
         if self.crop_mode == 'none':
-            crop_size = (x.shape[img_col_index], x.shape[img_row_index])
+            crop_size = (x.shape[img_row_index], x.shape[img_col_index])
         else:
             crop_size = self.crop_size
 
@@ -405,14 +417,14 @@ class SegDataGenerator(object):
         if self.height_shift_range:
             # * x.shape[img_row_index]
             tx = np.random.uniform(-self.height_shift_range,
-                                   self.height_shift_range) * crop_size[1]
+                                   self.height_shift_range) * crop_size[0]
         else:
             tx = 0
 
         if self.width_shift_range:
             # * x.shape[img_col_index]
             ty = np.random.uniform(-self.width_shift_range,
-                                   self.width_shift_range) * crop_size[0]
+                                   self.width_shift_range) * crop_size[1]
         else:
             ty = 0
 
