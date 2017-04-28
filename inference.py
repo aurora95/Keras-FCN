@@ -40,10 +40,10 @@ def inference(model_name, weight_file, image_size, image_list, data_dir, label_d
         img_num = img_num.strip('\n')
         total += 1
         print('#%d: %s' % (total,img_num))
-        image = Image.open('%s/%s.jpg' % (data_dir, img_num))
+        image = Image.open('%s/%s%s' % (data_dir, img_num, data_suffix))
         image = img_to_array(image)  # , data_format='default')
 
-        label = Image.open('%s/%s.png' % (label_dir, img_num))
+        label = Image.open('%s/%s%s' % (label_dir, img_num, label_suffix))
         label_size = label.size
 
         img_h, img_w = image.shape[0:2]

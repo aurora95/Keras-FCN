@@ -184,6 +184,7 @@ if __name__ == '__main__':
         data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
         data_suffix='.jpg'
+        label_suffix='.png'
         classes = 21
     if dataset == 'COCO':
         # ###################### loss function & metric ########################
@@ -206,8 +207,6 @@ if __name__ == '__main__':
         loss_fn = softmax_sparse_crossentropy_ignoring_last_label
         metrics = [sparse_accuracy_ignoring_last_label]
         loss_shape = None
-        label_suffix = '.png'
-        data_suffix='.png'
         ignore_label = 255
         label_cval = 255
 
