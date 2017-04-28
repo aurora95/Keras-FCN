@@ -13,7 +13,9 @@ from keras.applications.imagenet_utils import preprocess_input
 from models import *
 
 
-def inference(model_name, weight_file, image_size, image_list, data_dir, label_dir, return_results=True, save_dir=None):
+def inference(model_name, weight_file, image_size, image_list, data_dir, label_dir, return_results=True, save_dir=None,
+              label_suffix='.png',
+              data_suffix='.jpg'):
     current_dir = os.path.dirname(os.path.realpath(__file__))
     # mean_value = np.array([104.00699, 116.66877, 122.67892])
     batch_shape = (1, ) + image_size + (3, )
