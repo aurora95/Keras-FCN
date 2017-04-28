@@ -25,11 +25,11 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
           resume_training=False, class_weight=None, dataset='VOC2012',
           loss_fn = softmax_sparse_crossentropy_ignoring_last_label,
           metrics = [sparse_accuracy_ignoring_last_label],
-          loss_shape = None,
-          label_suffix = '.png',
+          loss_shape=None,
+          label_suffix='.png',
           data_suffix='.jpg',
-          ignore_label = 255,
-          label_cval = 255):
+          ignore_label=255,
+          label_cval=255):
     if target_size:
         input_shape = target_size + (3,)
     else:
@@ -174,7 +174,6 @@ if __name__ == '__main__':
         weight_decay = 0.0001/2
     else:
         weight_decay = 1e-4
-    classes = 21
     target_size = (320, 320)
     dataset = 'VOC2012_BERKELEY'
     if dataset == 'VOC2012_BERKELEY':
@@ -185,6 +184,7 @@ if __name__ == '__main__':
         data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
         data_suffix='.jpg'
+        classes = 21
     if dataset == 'COCO':
         # ###################### loss function & metric ########################
         train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
