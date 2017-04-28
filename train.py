@@ -22,7 +22,13 @@ import time
 def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
           model_name, train_file_path, val_file_path,
           data_dir, label_dir, target_size=None, batchnorm_momentum=0.9,
-          resume_training=False, class_weight=None, dataset='VOC2012'):
+          resume_training=False, class_weight=None, dataset='VOC2012',
+          loss_fn = softmax_sparse_crossentropy_ignoring_last_label,
+          metrics = [sparse_accuracy_ignoring_last_label],
+          loss_shape = None,
+          label_suffix = '.png',
+          ignore_label = 255,
+          label_cval = 255):
     if target_size:
         input_shape = target_size + (3,)
     else:
@@ -77,22 +83,6 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
     # ###################### optimizer ########################
     optimizer = SGD(lr=lr_base, momentum=0.9)
     # optimizer = Nadam(lr=lr_base, beta_1 = 0.825, beta_2 = 0.99685)
-
-    # ###################### loss function & metric ########################
-    if dataset == 'VOC2012' or dataset == 'VOC2012_BERKELEY':
-        loss_fn = softmax_sparse_crossentropy_ignoring_last_label
-        metrics = [sparse_accuracy_ignoring_last_label]
-        loss_shape = None
-        label_suffix = '.png'
-        ignore_label = 255
-        label_cval = 255
-    if dataset == 'COCO':
-        loss_fn = binary_crossentropy_with_logits
-        metrics = [binary_accuracy]
-        loss_shape = (target_size[0] * target_size[1] * classes,)
-        label_suffix = '.npy'
-        ignore_label = None
-        label_cval = 0
 
     model.compile(loss=loss_fn,
                   optimizer=optimizer,
@@ -176,7 +166,7 @@ if __name__ == '__main__':
     batch_size = 16
     batchnorm_momentum = 0.95
     epochs = 250
-    lr_base = 0.04 * (float(batch_size) / 16)
+    lr_base = 0.01 * (float(batch_size) / 16)
     lr_power = 0.9
     resume_training = False
     if model_name is 'AtrousFCN_Resnet50_16s':
@@ -193,12 +183,30 @@ if __name__ == '__main__':
         val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_val.txt')
         data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
-    else:
+    if dataset == 'COCO':
+        # ###################### loss function & metric ########################
         train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
         # train_file_path = os.path.expanduser('~/.keras/datasets/oneimage/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
         val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/val.txt')
         data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/SegmentationClass')
+        loss_fn = binary_crossentropy_with_logits
+        metrics = [binary_accuracy]
+        loss_shape = (target_size[0] * target_size[1] * classes,)
+        label_suffix = '.npy'
+        ignore_label = None
+        label_cval = 0
+
+
+    # ###################### loss function & metric ########################
+    if dataset == 'VOC2012' or dataset == 'VOC2012_BERKELEY':
+        loss_fn = softmax_sparse_crossentropy_ignoring_last_label
+        metrics = [sparse_accuracy_ignoring_last_label]
+        loss_shape = None
+        label_suffix = '.png'
+        ignore_label = 255
+        label_cval = 255
+
     # Class weight is not yet supported for 3+ dimensional targets
     # class_weight = {i: 1 for i in range(classes)}
     # # The background class is much more common than all
@@ -211,4 +219,5 @@ if __name__ == '__main__':
     K.set_session(session)
     train(batch_size, epochs, lr_base, lr_power, weight_decay, classes, model_name, train_file_path, val_file_path,
           data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training,
-          class_weight=class_weight)
+          class_weight=class_weight, loss_fn=loss_fn, metrics=metrics, loss_shape=loss_shape,
+          label_suffix=label_suffix, ignore_label=ignore_label, label_cval=label_cval)
