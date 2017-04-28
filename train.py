@@ -27,6 +27,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
           metrics = [sparse_accuracy_ignoring_last_label],
           loss_shape = None,
           label_suffix = '.png',
+          data_suffix='.jpg',
           ignore_label = 255,
           label_cval = 255):
     if target_size:
@@ -134,7 +135,7 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
     history = model.fit_generator(
         generator=train_datagen.flow_from_directory(
             file_path=train_file_path,
-            data_dir=data_dir, data_suffix='.jpg',
+            data_dir=data_dir, data_suffix=data_suffix,
             label_dir=label_dir, label_suffix=label_suffix,
             classes=classes,
             target_size=target_size, color_mode='rgb',
@@ -183,6 +184,7 @@ if __name__ == '__main__':
         val_file_path   = os.path.expanduser('~/.keras/datasets/VOC2012/combined_imageset_val.txt')
         data_dir        = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/JPEGImages')
         label_dir       = os.path.expanduser('~/.keras/datasets/VOC2012/combined_annotations')
+        data_suffix='.jpg'
     if dataset == 'COCO':
         # ###################### loss function & metric ########################
         train_file_path = os.path.expanduser('~/.keras/datasets/VOC2012/VOCdevkit/VOC2012/ImageSets/Segmentation/train.txt') #Data/VOClarge/VOC2012/ImageSets/Segmentation
@@ -194,6 +196,7 @@ if __name__ == '__main__':
         metrics = [binary_accuracy]
         loss_shape = (target_size[0] * target_size[1] * classes,)
         label_suffix = '.npy'
+        data_suffix='.jpg'
         ignore_label = None
         label_cval = 0
 
@@ -204,6 +207,7 @@ if __name__ == '__main__':
         metrics = [sparse_accuracy_ignoring_last_label]
         loss_shape = None
         label_suffix = '.png'
+        data_suffix='.png'
         ignore_label = 255
         label_cval = 255
 
@@ -219,5 +223,5 @@ if __name__ == '__main__':
     K.set_session(session)
     train(batch_size, epochs, lr_base, lr_power, weight_decay, classes, model_name, train_file_path, val_file_path,
           data_dir, label_dir, target_size=target_size, batchnorm_momentum=batchnorm_momentum, resume_training=resume_training,
-          class_weight=class_weight, loss_fn=loss_fn, metrics=metrics, loss_shape=loss_shape,
+          class_weight=class_weight, loss_fn=loss_fn, metrics=metrics, loss_shape=loss_shape, data_suffix=data_suffix,
           label_suffix=label_suffix, ignore_label=ignore_label, label_cval=label_cval)
