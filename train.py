@@ -132,6 +132,11 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
         lines = fp.readlines()
         fp.close()
         return len(lines)
+
+    # from Keras documentation: Total number of steps (batches of samples) to yield from generator before declaring one epoch finished
+    # and starting the next epoch. It should typically be equal to the number of unique samples of your dataset divided by the batch size.
+    steps_per_epoch = int(np.ceil(get_file_len(train_file_path) / float(batch_size)))
+
     history = model.fit_generator(
         generator=train_datagen.flow_from_directory(
             file_path=train_file_path,
@@ -144,10 +149,10 @@ def train(batch_size, epochs, lr_base, lr_power, weight_decay, classes,
             ignore_label=ignore_label,
             # save_to_dir='Images/'
         ),
-        steps_per_epoch=get_file_len(train_file_path),
+        steps_per_epoch=steps_per_epoch,
         epochs=epochs,
         callbacks=callbacks,
-        nb_worker=4,
+        workers=4,
         # validation_data=val_datagen.flow_from_directory(
         #     file_path=val_file_path, data_dir=data_dir, data_suffix='.jpg',
         #     label_dir=label_dir, label_suffix='.png',classes=classes,

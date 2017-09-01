@@ -56,7 +56,7 @@ class BilinearUpSampling2D(Layer):
         self.input_spec = [InputSpec(ndim=4)]
         super(BilinearUpSampling2D, self).__init__(**kwargs)
 
-    def get_output_shape_for(self, input_shape):
+    def compute_output_shape(self, input_shape):
         if self.data_format == 'channels_first':
             width = int(self.size[0] * input_shape[2] if input_shape[2] is not None else None)
             height = int(self.size[1] * input_shape[3] if input_shape[3] is not None else None)
