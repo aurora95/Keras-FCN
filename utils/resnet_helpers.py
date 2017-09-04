@@ -1,4 +1,5 @@
 from keras.layers import *
+from keras.layers.merge import Add
 from keras.regularizers import l2
 
 # The original help functions from keras does not have weight regularizers, so I modified them.
@@ -32,7 +33,7 @@ def identity_block(kernel_size, filters, stage, block, weight_decay=0., batch_mo
         x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', kernel_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', momentum=batch_momentum)(x)
 
-        x = merge([x, input_tensor], mode='sum')
+        x = Add()([x, input_tensor])
         x = Activation('relu')(x)
         return x
     return f
@@ -73,7 +74,7 @@ def conv_block(kernel_size, filters, stage, block, weight_decay=0., strides=(2, 
                                  name=conv_name_base + '1', kernel_regularizer=l2(weight_decay))(input_tensor)
         shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1', momentum=batch_momentum)(shortcut)
 
-        x = merge([x, shortcut], mode='sum')
+        x = Add()([x, shortcut])
         x = Activation('relu')(x)
         return x
     return f
@@ -100,7 +101,7 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., a
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
 
-        x = AtrousConv2D(nb_filter2, (kernel_size, kernel_size), atrous_rate=atrous_rate,
+        x = Conv2D(nb_filter2, (kernel_size, kernel_size), dilation_rate=atrous_rate,
                           padding='same', name=conv_name_base + '2b', kernel_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
@@ -108,7 +109,7 @@ def atrous_identity_block(kernel_size, filters, stage, block, weight_decay=0., a
         x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', kernel_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2c', momentum=batch_momentum)(x)
 
-        x = merge([x, input_tensor], mode='sum')
+        x = Add()([x, input_tensor])
         x = Activation('relu')(x)
         return x
     return f
@@ -135,7 +136,7 @@ def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strid
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2a', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
 
-        x = AtrousConv2D(nb_filter2, (kernel_size, kernel_size), padding='same', atrous_rate=atrous_rate,
+        x = Conv2D(nb_filter2, (kernel_size, kernel_size), padding='same', dilation_rate=atrous_rate,
                           name=conv_name_base + '2b', kernel_regularizer=l2(weight_decay))(x)
         x = BatchNormalization(axis=bn_axis, name=bn_name_base + '2b', momentum=batch_momentum)(x)
         x = Activation('relu')(x)
@@ -147,7 +148,7 @@ def atrous_conv_block(kernel_size, filters, stage, block, weight_decay=0., strid
                                  name=conv_name_base + '1', kernel_regularizer=l2(weight_decay))(input_tensor)
         shortcut = BatchNormalization(axis=bn_axis, name=bn_name_base + '1', momentum=batch_momentum)(shortcut)
 
-        x = merge([x, shortcut], mode='sum')
+        x = Add()([x, shortcut])
         x = Activation('relu')(x)
         return x
     return f
