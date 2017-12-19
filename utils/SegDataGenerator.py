@@ -182,8 +182,9 @@ class SegDirectoryIterator(Iterator):
 
     def next(self):
         with self.lock:
-            index_array, current_index, current_batch_size = next(
-                self.index_generator)
+            index_array = next(self.index_generator)
+
+        current_batch_size = len(index_array)
 
         # The transformation of images is not under thread lock so it can be
         # done in parallel
