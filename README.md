@@ -146,3 +146,16 @@ python evaluate.py
 ```
 
 Model weights will be in `~/src/Keras-FCN/Models`, along with saved image segmentation results from the validation dataset.
+
+## Key files
+
+- model.py 
+    - contains model definitions, you can use existing models or you can define your own one.
+- train.py 
+    - The training script. Most parameters are set in the main function, and data augmentation parameters are where SegDataGenerator is initialized, you may change them according to your needs.
+- inference.py 
+    - Used for infering segmentation results. It can be directly run and it's also called in evaluate.py
+- evaluate.py 
+    - Used for evaluating perforance. It will save all segmentation results as images and calculate IOU. Outputs are not perfectly formatted so you may need to look into the code to see the meaning. 
+
+Most parameters of train.py, inference.py, and evaluate.py are set in the main function.
